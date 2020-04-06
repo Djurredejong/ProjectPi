@@ -1,12 +1,13 @@
 package server;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+
+import helper.Converter;
 
 public class Server {
 	private DatagramSocket socket;
@@ -32,26 +33,10 @@ public class Server {
 //		new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
 //	}
 
-	public byte[] fileToBytes(File file) throws IOException {
-
-		FileInputStream fileInputStream = null;
-		byte[] bytesArray = new byte[(int) file.length()];
-
-		try {
-			fileInputStream = new FileInputStream(file);
-			fileInputStream.read(bytesArray);
-		} catch (IOException e) {
-			throw new IOException("Could not read (bytes from) file!");
-		} finally {
-			fileInputStream.close();
-		}
-		return bytesArray;
-	}
-
 	private void service() throws IOException {
 
-		File file = new File("Empty.txt");
-		byte[] tryout = fileToBytes(file);
+		File file = new File("Empty.pdf");
+		byte[] tryout = Converter.fileToBytes(file);
 		for (int i = 0; i < tryout.length; i++) {
 			System.out.println(tryout[i]);
 		}
@@ -67,7 +52,7 @@ public class Server {
 			int clientPort = request.getPort();
 
 //			File file = new File("Quotes.txt");
-			byte[] bytesFile = fileToBytes(file);
+			byte[] bytesFile = Converter.fileToBytes(file);
 			DatagramPacket response = new DatagramPacket(bytesFile, bytesFile.length, clientAddress, clientPort);
 
 			socket.send(response);

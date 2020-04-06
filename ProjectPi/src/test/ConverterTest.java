@@ -13,7 +13,7 @@ class ConverterTest {
 
 	public static final String srcPath = "/Users/joris.vandermeulen/git/ProjectPi/ProjectPi/";
 
-	public Converter converter;
+	private Converter converter;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -30,10 +30,14 @@ class ConverterTest {
 
 	@Test
 	void testBytesToFile() {
-		File file = new File(srcPath + "Empty.pdf");
+		File file = new File(srcPath + "Tiny.pdf");
 		byte data[] = converter.fileToBytes(file, 512);
-		File newFile = new File(srcPath);
-		converter.bytesToFile(data);
-//		assertEquals(newFile, srcPath + "Empty.pdf");
+		String path = srcPath + "/temp/Tiny.pdf";
+		File outputFile = converter.bytesToFile(data, path);
+		byte outputData[] = converter.fileToBytes(outputFile, 2345);
+		assertEquals(data.length, outputData.length);
+		for (int i = 0; (i < outputData.length && i < data.length); i++) {
+			assertEquals(data[i], outputData[i]);
+		}
 	}
 }

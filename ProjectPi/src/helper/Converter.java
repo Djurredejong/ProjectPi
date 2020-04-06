@@ -9,9 +9,20 @@ import java.io.IOException;
 public class Converter {
 
 	/**
-	 * convert file to array of bytes, which can then be send over UDP
+	 * Reads the enitre file at once
 	 */
-	public byte[] fileToBytes(File file, int mtu) {
+	public static byte[] fileToBytes(File file) {
+		return fileToBytes(file, (int) file.length());
+	}
+
+	/**
+	 * Convert file to array of bytes, which can then be send over UDP
+	 * 
+	 * @param file     The file to be converted
+	 * @param readSize The max. number of bytes to read from the file at once
+	 * @return The array of bytes representing the file
+	 */
+	public static byte[] fileToBytes(File file, int readSize) {
 		FileInputStream fis = null;
 		try {
 			fis = new FileInputStream(file);
@@ -23,17 +34,16 @@ public class Converter {
 		byte[] byteArray = new byte[len];
 
 		int off = 0;
-//		int numRead = 0;
-		while (off < len) {// ((off < len) && (numRead == fis.read(byteArray, off, (len - off)))) {
+		while (off < len) {
 
 			try {
-				fis.read(byteArray, off, Math.min(mtu, (len - off)));
-				System.out.println("reading bytes " + off + " to " + (off + Math.min(mtu, (len - off))));
+				fis.read(byteArray, off, Math.min(readSize, (len - off)));
+				System.out.println("reading bytes " + off + " to " + (off + Math.min(readSize, (len - off))));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 
-			off += mtu;
+			off += readSize;
 		}
 		try {
 			fis.close();
@@ -44,11 +54,16 @@ public class Converter {
 	}
 
 	/**
-	 * convert array of bytes back to file (upon receiving them via UDP)
+	 * Convert array of bytes back to file (upon receiving them via UDP)
+	 * 
+	 * @param byteArray Array of bytes representing a file
+	 * @param pathName  Destination path incl. filename (of choice) + correct
+	 *                  extension!
+	 * @return The file that was represented by the array of bytes
 	 */
-	public void bytesToFile(byte[] byteArray) {
+	public static File bytesToFile(byte[] byteArray, String pathName) {
 		FileOutputStream fos = null;
-		File file = new File("path");
+		File file = new File(pathName);
 		try {
 			fos = new FileOutputStream(file);
 		} catch (FileNotFoundException e) {
@@ -64,6 +79,7 @@ public class Converter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return file;
 	}
 
 }
