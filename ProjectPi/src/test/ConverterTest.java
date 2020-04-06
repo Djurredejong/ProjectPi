@@ -23,7 +23,7 @@ class ConverterTest {
 	@Test
 	void testFileToBytes() {
 		File file = new File(srcPath + "Empty.pdf");
-		byte data[] = converter.fileToBytes(file);
+		byte data[] = converter.fileToBytes(file, 512);
 		assertEquals(data.length, 3961);
 		assertEquals(data[1330], 66);
 	}
@@ -31,7 +31,7 @@ class ConverterTest {
 	@Test
 	void testBytesToFile() {
 		File file = new File(srcPath + "Empty.pdf");
-		byte data[] = converter.fileToBytes(file);
+		byte data[] = converter.fileToBytes(file, 512);
 		File newFile = new File(srcPath);
 		converter.bytesToFile(data);
 //		assertEquals(newFile, srcPath + "Empty.pdf");

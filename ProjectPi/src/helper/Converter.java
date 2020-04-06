@@ -11,7 +11,7 @@ public class Converter {
 	/**
 	 * convert file to array of bytes, which can then be send over UDP
 	 */
-	public byte[] fileToBytes(File file) {
+	public byte[] fileToBytes(File file, int mtu) {
 		FileInputStream fis = null;
 		try {
 			fis = new FileInputStream(file);
@@ -20,15 +20,25 @@ public class Converter {
 		}
 		int len = (int) file.length();
 		byte[] byteArray = new byte[len];
+		System.out.println("bytearraylen= " + len);
 
 		int off = 0;
 		while (off < len) {
 			try {
-				fis.read(byteArray, off, (len - off));
+//				System.out.println(byteArray[1] + "  " + byteArray[510] + "  " + byteArray[513]);
+
+				System.out.println("off= " + off + ", bytearraylen-off= " + (byteArray.length - off) + ", len= "
+						+ Math.min(mtu, (len - off)));
+				System.out.println(byteArray.length);
+
+				fis.read(byteArray, off, Math.min(mtu, (mtu - off)));
+
+				System.out
+						.println(byteArray[1] + "  " + byteArray[510] + "  " + byteArray[513] + "  " + byteArray[3822]);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			off += len;
+			off += mtu;
 		}
 		try {
 			fis.close();
