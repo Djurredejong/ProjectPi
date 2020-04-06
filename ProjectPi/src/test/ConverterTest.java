@@ -24,8 +24,8 @@ class ConverterTest {
 	void testFileToBytes() {
 		File file = new File(srcPath + "Empty.pdf");
 		byte data[] = converter.fileToBytes(file, 512);
-		assertEquals(data.length, 3961);
-		assertEquals(data[1330], 66);
+		assertEquals(3961, data.length);
+		assertEquals(66, data[1330]);
 	}
 
 	@Test

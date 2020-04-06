@@ -12,17 +12,18 @@ public class FileInputStreamOffset {
 		try {
 			FileInputStream fileInputStream = new FileInputStream(srcPath + "Hello.txt");
 
-			byte[] buffer = new byte[4];
-			int i = fileInputStream.read(buffer, 0, 1);
-			int j = fileInputStream.read(buffer, 2, 1);
-
-			System.out.println("Number of bytes read:- " + (i + j));
-
-			for (byte b : buffer) {
-				char c = (char) b;
-				if (b == 0)
-					c = '-';
-				System.out.println("Char read from buffer :- " + c);
+			byte[] buffer = new byte[8];
+			int k = 0;
+			while (k < 8) {
+				fileInputStream.read(buffer, k, 2);
+				for (byte b : buffer) {
+					char c = (char) b;
+					if (b == 0) {
+						c = '-';
+					}
+					System.out.println("Char read from buffer :- " + c);
+				}
+				k += 2;
 			}
 
 			fileInputStream.close();

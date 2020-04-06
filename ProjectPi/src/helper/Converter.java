@@ -18,26 +18,21 @@ public class Converter {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+
 		int len = (int) file.length();
 		byte[] byteArray = new byte[len];
-		System.out.println("bytearraylen= " + len);
 
 		int off = 0;
-		while (off < len) {
+//		int numRead = 0;
+		while (off < len) {// ((off < len) && (numRead == fis.read(byteArray, off, (len - off)))) {
+
 			try {
-//				System.out.println(byteArray[1] + "  " + byteArray[510] + "  " + byteArray[513]);
-
-				System.out.println("off= " + off + ", bytearraylen-off= " + (byteArray.length - off) + ", len= "
-						+ Math.min(mtu, (len - off)));
-				System.out.println(byteArray.length);
-
-				fis.read(byteArray, off, Math.min(mtu, (mtu - off)));
-
-				System.out
-						.println(byteArray[1] + "  " + byteArray[510] + "  " + byteArray[513] + "  " + byteArray[3822]);
+				fis.read(byteArray, off, Math.min(mtu, (len - off)));
+				System.out.println("reading bytes " + off + " to " + (off + Math.min(mtu, (len - off))));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+
 			off += mtu;
 		}
 		try {
@@ -46,16 +41,6 @@ public class Converter {
 			e.printStackTrace();
 		}
 		return byteArray;
-
-		// next part requires java.nio
-
-//		Path fPath = Paths.get(srcPath + "Tiny.pdf");
-//		byte[] byteArray = null;
-//		try {
-//			byteArry = Files.readAllBytes(fPath);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
 	}
 
 	/**
