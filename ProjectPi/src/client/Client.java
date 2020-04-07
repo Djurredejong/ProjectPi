@@ -12,8 +12,12 @@ import helper.Converter;
 public class Client {
 
 	private DatagramSocket socket;
-	/** according to my protocol: 2B seqNr, 2B checksum, 512B data */
-	private static final int pktSize = 516;
+	/**
+	 * the "header" consists of a 2B seqNr and a 2B checksum for data integrity
+	 */
+	private static final int headSize = 4;
+	private static final int mtu = 512;
+	private static final int pktSize = headSize + mtu;
 
 	public Client() throws SocketException {
 		socket = new DatagramSocket();
@@ -41,13 +45,16 @@ public class Client {
 		socket.send(request);
 		System.out.println("request sent");
 
-		String fileName = "tryEmptyFile.txt";
-		receiveFile(System.getProperty("user.dir") + File.separator + fileName);
+		String fileName = "medium.pdf";
+		receiveFile(System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName);
 	}
 
 	private void receiveFile(String pathName) throws IOException {
 		// TODO recFileLength to be received as first response to request
-		int recFileLength = (3961 + 4 * (3961 % 512 + 1));
+		// tiny length
+		// int recFileLength = 24286;
+		// medium length
+		int recFileLength = 475231;
 		byte[] recFileBytes = new byte[recFileLength];
 		byte[] buf = new byte[pktSize];
 
@@ -55,15 +62,15 @@ public class Client {
 		while (off < recFileLength) {
 
 			DatagramPacket pkt = new DatagramPacket(buf, pktSize);
+			System.out.println("off= " + off);
 			socket.receive(pkt);
+			System.out.println("received packet of length " + pkt.getLength());
 
-			for (int i = 0; i < pkt.getLength(); i++) {
-				// TODO calculate starting position for the data based on seqNr
-				recFileBytes[i + off] = pkt.getData()[i];
-			}
-			off += pktSize;
+			System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (recFileLength - off)));
+			off += mtu;
 		}
 
+		System.out.println("The file has been received!");
 		Converter.byteArrayToFile(recFileBytes, pathName);
 	}
 }

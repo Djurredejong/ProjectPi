@@ -52,9 +52,9 @@ public class Converter {
 		int seqNr = 0;
 		int checksum = 0;
 		// TODO implement checksum value for data integrity
-		if (withSeqNr || withChecksum) {
-			seqNr = (int) (Math.random() * 65536);
-		}
+//		if (withSeqNr || withChecksum) {
+//			seqNr = (int) (Math.random() * 65536);
+//		}
 
 		while (off < len) {
 

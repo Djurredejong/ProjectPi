@@ -34,7 +34,7 @@ public class Server {
 
 	public void service() throws IOException {
 
-		File file = new File("Empty.pdf");
+		File file = new File("medium.pdf");
 
 		while (true) {
 			DatagramPacket request = new DatagramPacket(new byte[1], 1);
@@ -57,7 +57,11 @@ public class Server {
 
 			DatagramPacket pkt = new DatagramPacket(bytesFile, pktSize, clientAddress, clientPort);
 
+			System.out.println("off= " + off);
+
 			socket.send(pkt);
+
+			System.out.println("sent packet of length " + pkt.getLength());
 
 			off += pktSize;
 		}
