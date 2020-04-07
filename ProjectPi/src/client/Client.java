@@ -8,12 +8,21 @@ import java.net.SocketTimeoutException;
 
 public class Client {
 
+	private DatagramSocket socket;
+	/** according to my protocol: 2B seqNr, 2B checksum, 512B data */
+	private static final int pktSize = 516;
+
 	public static void main(String[] args) {
 
+		String hostname = "localhost";
+		int port = 9999;
+
 		try {
-			InetAddress address = InetAddress.getLocalHost();// InetAddress.getByName(hostname);
+			
+			Client client = 
+			
+			InetAddress address = InetAddress.getByName(hostname);
 			DatagramSocket socket = new DatagramSocket();
-			int port = 9999;
 
 			while (true) {
 
@@ -48,15 +57,16 @@ public class Client {
 
 	}
 
-	private static void receiveFile() {
-		// length to be received in
-		byte[] byteArray = new byte[length];
+	private void receiveFile() throws IOException {
+		// TODO recFileLength to be received as first response to request
+		int recFileLength = (3961 + 4 * (3961 % 512 + 1));
+		byte[] buf = new byte[pktSize];
+
 		int off = 0;
-		while (off < bytesFile.length) {
+		while (off < recFileLength) {
 
-			DatagramPacket pkt = new DatagramPacket(bytesFile, off, pktSize, clientAddress, clientPort);
-
-			socket.send(pkt);
+			DatagramPacket pkt = new DatagramPacket(buf, pktSize);
+			socket.receive(pkt);
 
 			off += pktSize;
 		}

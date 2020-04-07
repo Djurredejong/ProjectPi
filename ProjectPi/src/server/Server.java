@@ -29,7 +29,7 @@ public class Server {
 		}
 	}
 
-	private void service() throws IOException {
+	public void service() throws IOException {
 
 		File file = new File("Empty.pdf");
 
