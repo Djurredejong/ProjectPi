@@ -11,6 +11,8 @@ import helper.Converter;
 
 public class Server {
 	private DatagramSocket socket;
+	/** according to my protocol: 2B seqNr, 2B checksum, 512B data */
+	private static final int pktSize = 516;
 
 	public Server(int port) throws SocketException {
 		socket = new DatagramSocket(port);
@@ -20,29 +22,16 @@ public class Server {
 		try {
 			Server server = new Server(9999);
 			server.service();
-		} catch (SocketException ex) {
-			System.out.println("Socket error: " + ex.getMessage());
-		} catch (IOException ex) {
-			System.out.println("I/O error: " + ex.getMessage());
+		} catch (SocketException e) {
+			System.out.println("Socket error: " + e.getMessage());
+		} catch (IOException e) {
+			System.out.println("I/O error: " + e.getMessage());
 		}
 	}
-
-//	private DatagramPacket sendFile() throws IOException {
-//		File file = new File("Quotes.txt");
-//		byte[] bytesFile = readBytesFromFile(file);
-//		new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
-//	}
 
 	private void service() throws IOException {
 
 		File file = new File("Empty.pdf");
-		byte[] tryout = Converter.fileToBytes(file);
-		for (int i = 0; i < tryout.length; i++) {
-			System.out.println(tryout[i]);
-		}
-		System.out.println(tryout.length);
-
-		shutdown();
 
 		while (true) {
 			DatagramPacket request = new DatagramPacket(new byte[1], 1);
@@ -51,11 +40,23 @@ public class Server {
 			InetAddress clientAddress = request.getAddress();
 			int clientPort = request.getPort();
 
-//			File file = new File("Quotes.txt");
-			byte[] bytesFile = Converter.fileToBytes(file);
-			DatagramPacket response = new DatagramPacket(bytesFile, bytesFile.length, clientAddress, clientPort);
+			sendFile(file, clientAddress, clientPort);
 
-			socket.send(response);
+			// close the socket
+			shutdown();
+		}
+	}
+
+	public void sendFile(File file, InetAddress clientAddress, int clientPort) throws IOException {
+		byte[] bytesFile = Converter.fileToPacketByteArray(file);
+		int off = 0;
+		while (off < bytesFile.length) {
+
+			DatagramPacket pkt = new DatagramPacket(bytesFile, off, pktSize, clientAddress, clientPort);
+
+			socket.send(pkt);
+
+			off += pktSize;
 		}
 	}
 

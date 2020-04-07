@@ -17,6 +17,8 @@ public class Client {
 
 			while (true) {
 
+				receiveFile();
+
 				DatagramPacket request = new DatagramPacket(new byte[1], 1, address, port);
 				socket.send(request);
 
@@ -31,15 +33,32 @@ public class Client {
 
 				Thread.sleep(1000);
 			}
+			socket.close();
 
-		} catch (SocketTimeoutException ex) {
-			System.out.println("Timeout error: " + ex.getMessage());
-			ex.printStackTrace();
-		} catch (IOException ex) {
-			System.out.println("Client error: " + ex.getMessage());
-			ex.printStackTrace();
-		} catch (InterruptedException ex) {
-			ex.printStackTrace();
+		} catch (SocketTimeoutException e) {
+			System.out.println("Timeout error: " + e.getMessage());
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.out.println("Client error: " + e.getMessage());
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			System.out.println("Interrupted error: " + e.getMessage());
+			e.printStackTrace();
+		}
+
+	}
+
+	private static void receiveFile() {
+		// length to be received in
+		byte[] byteArray = new byte[length];
+		int off = 0;
+		while (off < bytesFile.length) {
+
+			DatagramPacket pkt = new DatagramPacket(bytesFile, off, pktSize, clientAddress, clientPort);
+
+			socket.send(pkt);
+
+			off += pktSize;
 		}
 	}
 }
