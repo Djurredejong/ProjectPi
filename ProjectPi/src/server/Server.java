@@ -10,6 +10,7 @@ import java.net.SocketException;
 import helper.Converter;
 
 public class Server {
+
 	private DatagramSocket socket;
 	/** according to my protocol: 2B seqNr, 2B checksum, 512B data */
 	private static final int pktSize = 516;
@@ -19,8 +20,10 @@ public class Server {
 	}
 
 	public static void main(String[] args) {
+		System.out.println("The server has been started");
 		try {
-			Server server = new Server(9999);
+			int port = 9999;
+			Server server = new Server(port);
 			server.service();
 		} catch (SocketException e) {
 			System.out.println("Socket error: " + e.getMessage());
@@ -52,7 +55,7 @@ public class Server {
 		int off = 0;
 		while (off < bytesFile.length) {
 
-			DatagramPacket pkt = new DatagramPacket(bytesFile, off, pktSize, clientAddress, clientPort);
+			DatagramPacket pkt = new DatagramPacket(bytesFile, pktSize, clientAddress, clientPort);
 
 			socket.send(pkt);
 

@@ -87,7 +87,7 @@ public class Converter {
 	}
 
 	/**
-	 * Convert array of bytes back to file (upon receiving them via UDP)
+	 * Convert array of bytes to file and return that file
 	 * 
 	 * @param byteArray Array of bytes representing a file
 	 * @param pathName  Destination path incl. filename (of choice) + correct
@@ -113,6 +113,33 @@ public class Converter {
 			e.printStackTrace();
 		}
 		return file;
+	}
+
+	/**
+	 * Convert array of bytes to file and return nothing
+	 * 
+	 * @param byteArray Array of bytes representing a file
+	 * @param pathName  Destination path incl. filename (of choice) + correct
+	 *                  extension!
+	 */
+	public static void byteArrayToFile(byte[] byteArray, String pathName) {
+		FileOutputStream fos = null;
+		File file = new File(pathName);
+		try {
+			fos = new FileOutputStream(file);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		try {
+			fos.write(byteArray);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			fos.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }
