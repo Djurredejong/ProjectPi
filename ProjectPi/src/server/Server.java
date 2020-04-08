@@ -32,9 +32,9 @@ public class Server {
 
 	public void service() throws IOException {
 
-//		File file = new File("tiny.pdf");
+		File file = new File("tiny.pdf");
 //		File file = new File("medium.pdf");
-		File file = new File("large.pdf");
+//		File file = new File("large.pdf");
 
 		while (true) {
 			DatagramPacket request = new DatagramPacket(new byte[1], 1);
@@ -43,7 +43,7 @@ public class Server {
 			InetAddress clientAddress = request.getAddress();
 			int clientPort = request.getPort();
 
-			Transfer.sendFile(file, clientAddress, clientPort, socket, 0);
+			Transfer.sendFile(file, clientAddress, clientPort, socket, 0.1);
 
 			shutdown();
 		}

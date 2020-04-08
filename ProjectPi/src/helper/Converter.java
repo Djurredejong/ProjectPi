@@ -65,7 +65,6 @@ public class Converter {
 				byteArray[off + 2] = (byte) ((checksum >>> 8) & 0xFF);
 				byteArray[off + 3] = (byte) (checksum & 0xFF);
 				off += 4;
-				System.out.println("seqNr = " + seqNr);
 				seqNr++;
 				if (seqNr == 32768) {
 					seqNr = 0;
@@ -74,7 +73,7 @@ public class Converter {
 
 			try {
 				fis.read(byteArray, off, Math.min(readSize, (len - off)));
-				System.out.println("reading bytes " + off + " to " + (off + Math.min(readSize, (len - off))));
+//				System.out.println("reading bytes " + off + " to " + (off + Math.min(readSize, (len - off))));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
