@@ -44,7 +44,7 @@ public class Converter {
 
 		int len = (int) file.length();
 		if (withSeqNr || withChecksum) {
-			len += 4 * (len % readSize + 1);
+			len += 4 * (len / readSize + 1);
 		}
 		byte[] byteArray = new byte[len];
 
@@ -59,12 +59,13 @@ public class Converter {
 		while (off < len) {
 
 			if (withSeqNr || withChecksum) {
-				byteArray[off] = (byte) (seqNr & 0xFF);
-				byteArray[off + 1] = (byte) ((seqNr >>> 8) & 0xFF);
+				byteArray[off] = (byte) ((seqNr >>> 8) & 0xFF);
+				byteArray[off + 1] = (byte) (seqNr & 0xFF);
 				// TODO calculate checksum
-				byteArray[off + 2] = (byte) (checksum & 0xFF);
-				byteArray[off + 3] = (byte) ((checksum >>> 8) & 0xFF);
+				byteArray[off + 2] = (byte) ((checksum >>> 8) & 0xFF);
+				byteArray[off + 3] = (byte) (checksum & 0xFF);
 				off += 4;
+				System.out.println("seqNr = " + seqNr);
 				seqNr++;
 			}
 

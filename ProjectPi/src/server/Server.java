@@ -34,6 +34,7 @@ public class Server {
 
 	public void service() throws IOException {
 
+		// File file = new File("tiny.pdf");
 		File file = new File("medium.pdf");
 
 		while (true) {
@@ -53,15 +54,20 @@ public class Server {
 	public void sendFile(File file, InetAddress clientAddress, int clientPort) throws IOException {
 		byte[] bytesFile = Converter.fileToPacketByteArray(file);
 		int off = 0;
+		int i = 0;
+		System.out.println(bytesFile.length);
 		while (off < bytesFile.length) {
 
-			DatagramPacket pkt = new DatagramPacket(bytesFile, pktSize, clientAddress, clientPort);
+			System.out.println("Going to send packet ");
+			System.out.println("off = " + off);
 
-			System.out.println("off= " + off);
+			DatagramPacket pkt = new DatagramPacket(bytesFile, off, Math.min(pktSize, (bytesFile.length - off)),
+					clientAddress, clientPort);
 
 			socket.send(pkt);
 
-			System.out.println("sent packet of length " + pkt.getLength());
+			System.out.println("sent packet number " + i + " of length " + pkt.getLength());
+			i++;
 
 			off += pktSize;
 		}

@@ -45,6 +45,7 @@ public class Client {
 		socket.send(request);
 		System.out.println("request sent");
 
+//		String fileName = "tiny.pdf";
 		String fileName = "medium.pdf";
 		receiveFile(System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName);
 	}
@@ -55,16 +56,25 @@ public class Client {
 		// int recFileLength = 24286;
 		// medium length
 		int recFileLength = 475231;
+		// large length
+		// int recFileLength = 31498458;
 		byte[] recFileBytes = new byte[recFileLength];
 		byte[] buf = new byte[pktSize];
 
 		int off = 0;
+		int i = 0;
 		while (off < recFileLength) {
 
 			DatagramPacket pkt = new DatagramPacket(buf, pktSize);
-			System.out.println("off= " + off);
+			System.out.println("off = " + off);
 			socket.receive(pkt);
-			System.out.println("received packet of length " + pkt.getLength());
+			System.out.println("received packet number " + i + " of length " + pkt.getLength());
+
+//			if (i == 0 || i == 1 || i == 2) {
+//				System.out.println(new String(pkt.getData(), pkt.getOffset(), pkt.getLength(), StandardCharsets.UTF_8));
+//			}
+
+			i++;
 
 			System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (recFileLength - off)));
 			off += mtu;
