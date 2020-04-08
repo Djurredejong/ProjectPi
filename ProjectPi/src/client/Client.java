@@ -6,6 +6,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
 
 import helper.Converter;
 
@@ -63,21 +64,22 @@ public class Client {
 
 		int off = 0;
 		int i = 0;
+		ArrayList<Integer> recPkt = new ArrayList<Integer>();
 		while (off < recFileLength) {
 
 			DatagramPacket pkt = new DatagramPacket(buf, pktSize);
 			System.out.println("off = " + off);
 			socket.receive(pkt);
-			System.out.println("received packet number " + i + " of length " + pkt.getLength());
 
-//			if (i == 0 || i == 1 || i == 2) {
-//				System.out.println(new String(pkt.getData(), pkt.getOffset(), pkt.getLength(), StandardCharsets.UTF_8));
-//			}
+			int seqNr = (pkt.getData()[0] << 8) | (pkt.getData()[1] & 0xFF);
+			System.out.println("received packet number " + seqNr + " of length " + pkt.getLength());
 
-			i++;
+			recPkt.add(seqNr);
 
 			System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (recFileLength - off)));
 			off += mtu;
+
+			System.out.println("number of received packets= " + recPkt.size());
 		}
 
 		System.out.println("The file has been received!");
