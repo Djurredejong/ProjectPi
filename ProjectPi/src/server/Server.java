@@ -6,15 +6,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 
-import helper.Converter;
+import helper.Transfer;
 
 public class Server {
 
 	private DatagramSocket socket;
-	/** according to my protocol: 2B seqNr, 2B checksum, 512B data */
-	private static final int pktSize = 516;
 
 	public Server(int port) throws SocketException {
 		socket = new DatagramSocket(port);
@@ -46,46 +43,11 @@ public class Server {
 			InetAddress clientAddress = request.getAddress();
 			int clientPort = request.getPort();
 
-			sendFile(file, clientAddress, clientPort);
+			Transfer.sendFile(file, clientAddress, clientPort, socket, 0);
 
-			// close the socket
 			shutdown();
 		}
-	}
 
-	public void sendFile(File file, InetAddress address, int port) throws IOException {
-		byte[] bytesFile = Converter.fileToPacketByteArray(file);
-		int off = 0;
-		int seqNr = 0;
-
-		int resendCount = 0;
-
-		System.out.println(bytesFile.length);
-		while (off < bytesFile.length) {
-
-			DatagramPacket pkt = new DatagramPacket(bytesFile, off, Math.min(pktSize, (bytesFile.length - off)),
-					address, port);
-			socket.send(pkt);
-
-			seqNr++;
-			System.out.println("Sent packet " + seqNr + " of length " + pkt.getLength());
-
-			off += pktSize;
-
-			// receive acknowledgement or resend the packet after timeout
-			DatagramPacket ack = new DatagramPacket(new byte[1], 1);
-
-			socket.setSoTimeout(100);
-			try {
-				socket.receive(ack);
-			} catch (SocketTimeoutException e) {
-				System.out.println("Resending packet " + seqNr + " after socket timeout");
-				socket.send(pkt);
-				resendCount++;
-			}
-
-		}
-		System.out.println(resendCount + " times a packet was resend");
 	}
 
 	private void shutdown() {
