@@ -6,7 +6,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.util.ArrayList;
 
 import helper.Converter;
 
@@ -46,40 +45,60 @@ public class Client {
 		socket.send(request);
 		System.out.println("request sent");
 
+		// wait for the response on your request to receive a file
+		InetAddress servAddress = null;
+		int servPort = 0;
+		int recFileLength = 0;
+
 //		String fileName = "tiny.pdf";
-		String fileName = "medium.pdf";
-		receiveFile(System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName);
+//		String fileName = "medium.pdf";
+		String fileName = "large.pdf";
+		String filePath = System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName;
+		receiveFile(filePath, recFileLength, servAddress, servPort);
 	}
 
-	private void receiveFile(String pathName) throws IOException {
-		// TODO recFileLength to be received as first response to request
+	private void receiveFile(String pathName, int recFileLength, InetAddress address, int port) throws IOException {
 		// tiny length
-		// int recFileLength = 24286;
+		// recFileLength = 24286;
 		// medium length
-		int recFileLength = 475231;
+		// recFileLength = 475231;
 		// large length
-		// int recFileLength = 31498458;
+		recFileLength = 31498458;
 		byte[] recFileBytes = new byte[recFileLength];
 		byte[] buf = new byte[pktSize];
 
 		int off = 0;
-		int i = 0;
-		ArrayList<Integer> recPkt = new ArrayList<Integer>();
+		int prevSeqNr = -1;
+		int seqNr = -1;
+
+//		ArrayList<Integer> recPkt = new ArrayList<Integer>();
 		while (off < recFileLength) {
+			prevSeqNr = seqNr;
 
 			DatagramPacket pkt = new DatagramPacket(buf, pktSize);
 			System.out.println("off = " + off);
 			socket.receive(pkt);
 
-			int seqNr = (pkt.getData()[0] << 8) | (pkt.getData()[1] & 0xFF);
-			System.out.println("received packet number " + seqNr + " of length " + pkt.getLength());
+			seqNr = (pkt.getData()[0] << 8) | (pkt.getData()[1] & 0xFF);
+			System.out.println("Received packet number " + seqNr + " of length " + pkt.getLength());
 
-			recPkt.add(seqNr);
+			if (seqNr == prevSeqNr) {
+				// in case the packet is the same as the last one we received (which happens in
+				// case the last ack got lost), do not copy the data of the received packet into
+				// recFileBytes (but do resend the ack)
+			} else if (seqNr == prevSeqNr + 1) {
+				System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (recFileLength - off)));
+				off += mtu;
+			} else {
+				System.out.println("Error: very unexpected sequence number");
+				// TODO define own exceptions like ExitProgram
+			}
 
-			System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (recFileLength - off)));
-			off += mtu;
-
-			System.out.println("number of received packets= " + recPkt.size());
+			address = pkt.getAddress();
+			port = pkt.getPort();
+			// send acknowledgement
+			DatagramPacket ack = new DatagramPacket(new byte[1], 1, address, port);
+			socket.send(ack);
 		}
 
 		System.out.println("The file has been received!");
