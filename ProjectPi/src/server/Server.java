@@ -58,6 +58,8 @@ public class Server {
 		int off = 0;
 		int seqNr = 0;
 
+		int resendCount = 0;
+
 		System.out.println(bytesFile.length);
 		while (off < bytesFile.length) {
 
@@ -79,9 +81,11 @@ public class Server {
 			} catch (SocketTimeoutException e) {
 				System.out.println("Resending packet " + seqNr + " after socket timeout");
 				socket.send(pkt);
+				resendCount++;
 			}
 
 		}
+		System.out.println(resendCount + " times a packet was resend");
 	}
 
 	private void shutdown() {

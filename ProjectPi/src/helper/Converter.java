@@ -67,6 +67,9 @@ public class Converter {
 				off += 4;
 				System.out.println("seqNr = " + seqNr);
 				seqNr++;
+				if (seqNr == 32768) {
+					seqNr = 0;
+				}
 			}
 
 			try {

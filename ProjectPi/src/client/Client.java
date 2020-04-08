@@ -86,7 +86,7 @@ public class Client {
 				// in case the packet is the same as the last one we received (which happens in
 				// case the last ack got lost), do not copy the data of the received packet into
 				// recFileBytes (but do resend the ack)
-			} else if (seqNr == prevSeqNr + 1) {
+			} else if (seqNr == prevSeqNr + 1 || (prevSeqNr == 32767 && seqNr == 0)) {
 				System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (recFileLength - off)));
 				off += mtu;
 			} else {
