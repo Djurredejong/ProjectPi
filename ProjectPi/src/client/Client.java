@@ -47,7 +47,7 @@ public class Client {
 		String fileName = "large.pdf";
 		String filePath = System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName;
 //		Transfer.receiveFile(filePath, recFileLength, servAddress, servPort, socket);
-		Transfer.receiveFile(filePath, recFileLength, socket, 0);
+		Transfer.receiveFile(filePath, recFileLength, socket, 0.01);
 	}
 
 }

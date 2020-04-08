@@ -141,8 +141,10 @@ public class Transfer {
 		if (pktLossProb == 0) {
 			socket.send(pkt);
 		} else {
-			if ((int) (Math.random()) > pktLossProb) {
+			if (Math.random() > pktLossProb) {
 				socket.send(pkt);
+			} else {
+				// The packet got lost!
 			}
 		}
 	}
