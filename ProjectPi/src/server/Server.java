@@ -51,10 +51,6 @@ public class Server {
 
 			String fileName = null;
 			File file = null;
-			System.out.println(reqPkt.getData()[0]);
-			System.out.println(reqPkt.getData()[1]);
-			System.out.println(reqPkt.getData()[2]);
-			System.out.println(reqPkt.getData()[3]);
 			if (reqPkt.getLength() > 2 && reqPkt.getData()[2] != 0) {
 				fileName = new String(reqPkt.getData(), 2, maxFileNameLength, StandardCharsets.UTF_8);
 				fileName = fileName.trim();

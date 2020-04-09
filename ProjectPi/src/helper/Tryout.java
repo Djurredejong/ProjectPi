@@ -9,7 +9,7 @@ public class Tryout {
 
 	public static void main(String[] args) {
 //		testFileInputStream();
-		testBytesToStrings();
+//		testBytesToStrings();
 	}
 
 	private static void testBytesToStrings() {

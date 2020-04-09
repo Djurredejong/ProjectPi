@@ -32,6 +32,14 @@ public class Transfer {
 	public static void sendFile(File file, InetAddress address, int port, DatagramSocket socket, double pktLossProb)
 			throws IOException {
 
+		// First, send file info (size)
+		byte[] bytesSize = new byte[4];
+		for (int i = 0; i < 4; i++) {
+			bytesSize[i] = (byte) (file.length() >>> (i * 8));
+		}
+		DatagramPacket sizePkt = new DatagramPacket(bytesSize, 4, address, port);
+		sendPacket(sizePkt, socket);
+
 		byte[] bytesFile = Converter.fileToPacketByteArray(file);
 
 		int off = 0;
@@ -90,26 +98,37 @@ public class Transfer {
 	/**
 	 * receiveFile should be called before another program calls sendFile
 	 * 
-	 * @param pathName      The path (incl. filename and extension) where the file
-	 *                      should be stored
-	 * @param recFileLength The lenght of the file to be received
-	 * @param socket        The socket the file is being send via
-	 * @param pktLossProb   Probability that a packet (ack) being send by the
-	 *                      receiver of the file gets lost. Set to 0 if you do not
-	 *                      want to simulate packet loss on the packets (acks) being
-	 *                      send by the receiver of the file
+	 * @param pathName    The path (incl. filename and extension) where the file
+	 *                    should be stored
+	 * @param fileLength  The lenght of the file to be received
+	 * @param socket      The socket the file is being send via
+	 * @param pktLossProb Probability that a packet (ack) being send by the receiver
+	 *                    of the file gets lost. Set to 0 if you do not want to
+	 *                    simulate packet loss on the packets (acks) being send by
+	 *                    the receiver of the file
 	 */
-	public static void receiveFile(String pathName, int recFileLength, DatagramSocket socket, double pktLossProb)
-			throws IOException {
+	public static void receiveFile(String pathName, DatagramSocket socket, double pktLossProb) throws IOException {
 
-		byte[] recFileBytes = new byte[recFileLength];
+		// First, receive file info (size)
+		DatagramPacket sizePkt = new DatagramPacket(new byte[4], 4);
+		socket.setSoTimeout(0);
+		socket.receive(sizePkt);
+		byte[] bytesSize = new byte[4];
+		for (int i = 0; i < sizePkt.getLength(); i++) {
+			bytesSize[i] = sizePkt.getData()[i];
+		}
+		int fileLength = fourBytesToInt(bytesSize);
+//		System.out.println("the filelength is " + fileLength);
+
+		// Next, receive the packets that make up the file
+		byte[] recFileBytes = new byte[fileLength];
 		byte[] buf = new byte[pktSize];
 
 		int off = 0;
 		int prevSeqNr = -1;
 		int seqNr = -1;
 
-		while (off < recFileLength) {
+		while (off < fileLength) {
 			prevSeqNr = seqNr;
 
 			DatagramPacket pkt = new DatagramPacket(buf, pktSize);
@@ -127,7 +146,7 @@ public class Transfer {
 			} else if (seqNr == prevSeqNr + 1 || (prevSeqNr == 32767 && seqNr == 0)) {
 				// In case the packet is not the same as the last one we received, we copy the
 				// data of the received packet into recFileBytes
-				System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (recFileLength - off)));
+				System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (fileLength - off)));
 				off += mtu;
 			} else {
 				System.out.println("Error: very unexpected sequence number");
@@ -142,6 +161,8 @@ public class Transfer {
 //			System.out.println("Sent ack with sequence number " + twoBytesToInt(bytesAck));
 //			System.out.println("The offset is " + off);
 		}
+
+		// Finally, convert all the received data from the packets into the file
 		System.out.println("The file has been received!");
 		Converter.byteArrayToFile(recFileBytes, pathName);
 	}
@@ -162,8 +183,17 @@ public class Transfer {
 		}
 	}
 
+	public static void sendPacket(DatagramPacket pkt, DatagramSocket socket) throws IOException {
+		socket.send(pkt);
+	}
+
 	public static int twoBytesToInt(byte[] byteArray) {
-		return (byteArray[0] << 8 & 0xFF00) | (byteArray[1] & 0xFF);
+		return ((byteArray[1] & 0xFF) << 8) | ((byteArray[0] & 0xFF) << 0);
+	}
+
+	public static int fourBytesToInt(byte[] byteArray) {
+		return ((byteArray[3] & 0xFF) << 24) | ((byteArray[2] & 0xFF) << 16) | ((byteArray[1] & 0xFF) << 8)
+				| ((byteArray[0] & 0xFF) << 0);
 	}
 
 }

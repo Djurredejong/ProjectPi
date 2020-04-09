@@ -67,7 +67,7 @@ public class Client {
 		// be in this response, so that receiveFile can be called
 
 		String filePath = System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName;
-		Transfer.receiveFile(filePath, recFileLength, socket, 0.05);
+		Transfer.receiveFile(filePath, socket, 0.05);
 	}
 
 }
