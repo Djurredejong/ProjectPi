@@ -43,11 +43,14 @@ public class Client {
 		int recFileLength = 0;
 
 		String fileName = "tiny.pdf";
+		recFileLength = 24286;
 //		String fileName = "medium.pdf";
+//		recFileLength = 475231;
 //		String fileName = "large.pdf";
+//		recFileLength = 31498458;
+
 		String filePath = System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName;
-//		Transfer.receiveFile(filePath, recFileLength, servAddress, servPort, socket);
-		Transfer.receiveFile(filePath, recFileLength, socket, 0);
+		Transfer.receiveFile(filePath, recFileLength, socket, 0.9);
 	}
 
 }

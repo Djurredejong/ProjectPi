@@ -6,18 +6,19 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.util.Arrays;
 
 public class Transfer {
 	/**
-	 * the "header" consists of a 2B seqNr and a 2B checksum for data integrity
+	 * The "header" consists of a 2B seqNr and an unused 2B (perhaps to be used as
+	 * checksum for data integrity)
 	 */
 	private static final int headSize = 4;
 	private static final int mtu = 512;
 	private static final int pktSize = headSize + mtu;
 
 	/**
-	 * Sends a file, receiveFile should be called by another program before calling
-	 * sendFile
+	 * receiveFile should be called by another program before calling sendFile
 	 * 
 	 * @param file        The file to be send
 	 * @param address     The address to send to
@@ -30,8 +31,12 @@ public class Transfer {
 	 */
 	public static void sendFile(File file, InetAddress address, int port, DatagramSocket socket, double pktLossProb)
 			throws IOException {
+
 		byte[] bytesFile = Converter.fileToPacketByteArray(file);
+
+		int seqNr = 0;
 		int off = 0;
+		byte[] bytesSeq = new byte[2];
 
 		while (off < bytesFile.length) {
 
@@ -39,44 +44,53 @@ public class Transfer {
 					address, port);
 			sendPacket(pkt, socket, pktLossProb);
 
-			byte[] bytesSeq = new byte[2];
 			bytesSeq[0] = bytesFile[off];
 			bytesSeq[1] = bytesFile[off + 1];
-			System.out.println(
-					"Sent packet with sequence number " + twoBytesToInt(bytesSeq) + " of length " + pkt.getLength());
+			seqNr = twoBytesToInt(bytesSeq);
+			System.out.println("Sent packet with sequence number " + seqNr + " of length " + pkt.getLength());
 
-			// receive acknowledgement or resend the packet after timeout
-			DatagramPacket ack = new DatagramPacket(new byte[2], 2);
+			// When sending the very last packet and the ack for it gets lost, prevent
+			// getting stuck in an infinite loop!
+			if (off > (bytesFile.length - pktSize)) {
 
-			try {
-				socket.setSoTimeout(100);
-				socket.receive(ack);
-				byte[] bytesAck = new byte[2];
-				bytesAck[0] = ack.getData()[0];
-				bytesAck[1] = ack.getData()[1];
-				System.out.println("Received ack with sequence number " + twoBytesToInt(bytesAck));
-
-			} catch (SocketTimeoutException e) {
-				DatagramPacket pktResend = new DatagramPacket(bytesFile, off,
-						Math.min(pktSize, (bytesFile.length - off)), address, port);
-				sendPacket(pktResend, socket, pktLossProb);
-
-				byte[] bytesSeqResend = new byte[2];
-				bytesSeqResend[0] = bytesFile[off];
-				bytesSeqResend[1] = bytesFile[off + 1];
-				System.out.println("Resent packet " + twoBytesToInt(bytesSeqResend) + " after socket timeout");
-
+			} else {
+				receiveAck(pkt, socket, bytesSeq, pktLossProb);
 			}
 
 			off += pktSize;
-			System.out.println("the offset is now " + off);
-
 		}
 	}
 
 	/**
-	 * Receives a file, receiveFile should be called before another program calls
-	 * sendFile
+	 * Receive correct acknowledgement or retransmit the packet after timeout
+	 */
+	public static void receiveAck(DatagramPacket pkt, DatagramSocket socket, byte[] bytesSeq, double pktLossProb)
+			throws IOException {
+		boolean recAck = false;
+		byte[] bytesAck = new byte[2];
+		DatagramPacket ack = new DatagramPacket(new byte[2], 2);
+		try {
+			socket.setSoTimeout(100);
+			socket.receive(ack);
+			bytesAck[0] = ack.getData()[0];
+			bytesAck[1] = ack.getData()[1];
+			System.out.println("Received ack with sequence number " + twoBytesToInt(bytesAck));
+			recAck = true;
+		} catch (SocketTimeoutException e) {
+			recAck = false;
+		}
+		if (recAck && Arrays.equals(bytesAck, bytesSeq)) {
+			// All good!
+		} else {
+			// Keep retransmitting and waiting for the correct ack until the transfer
+			// succeeds
+			sendPacket(pkt, socket, pktLossProb);
+			receiveAck(pkt, socket, bytesSeq, pktLossProb);
+		}
+	}
+
+	/**
+	 * receiveFile should be called before another program calls sendFile
 	 * 
 	 * @param pathName      The path (incl. filename and extension) where the file
 	 *                      should be stored
@@ -89,12 +103,7 @@ public class Transfer {
 	 */
 	public static void receiveFile(String pathName, int recFileLength, DatagramSocket socket, double pktLossProb)
 			throws IOException {
-		// tiny length
-		recFileLength = 24286;
-		// medium length
-//		recFileLength = 475231;
-		// large length
-//		recFileLength = 31498458;
+
 		byte[] recFileBytes = new byte[recFileLength];
 		byte[] buf = new byte[pktSize];
 
@@ -102,11 +111,11 @@ public class Transfer {
 		int prevSeqNr = -1;
 		int seqNr = -1;
 
-//		ArrayList<Integer> recPkt = new ArrayList<Integer>();
 		while (off < recFileLength) {
 			prevSeqNr = seqNr;
 
 			DatagramPacket pkt = new DatagramPacket(buf, pktSize);
+			socket.setSoTimeout(0);
 			socket.receive(pkt);
 
 			seqNr = (pkt.getData()[0] << 8) | (pkt.getData()[1] & 0xFF);
@@ -115,17 +124,18 @@ public class Transfer {
 			InetAddress address = pkt.getAddress();
 			int port = pkt.getPort();
 			if (seqNr == prevSeqNr) {
+				// In case the packet is the same as the last one we received, we do not copy
+				// the data of the received packet into recFileBytes
 			} else if (seqNr == prevSeqNr + 1 || (prevSeqNr == 32767 && seqNr == 0)) {
-				// in case the packet is not the same as the last one we received, we copy the
+				// In case the packet is not the same as the last one we received, we copy the
 				// data of the received packet into recFileBytes
 				System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (recFileLength - off)));
 				off += mtu;
 			} else {
 				System.out.println("Error: very unexpected sequence number");
-				// TODO define own exceptions like ExitProgram
 			}
 
-			// send seqNr back as acknowledgement
+			// Send seqNr back as acknowledgement
 			byte[] bytesAck = new byte[2];
 			bytesAck[0] = pkt.getData()[0];
 			bytesAck[1] = pkt.getData()[1];
@@ -133,19 +143,15 @@ public class Transfer {
 			sendPacket(ack, socket, pktLossProb);
 			System.out.println("Sent ack with sequence number " + twoBytesToInt(bytesAck));
 
+			System.out.println("The offset is " + off);
 		}
-
 		System.out.println("The file has been received!");
 		Converter.byteArrayToFile(recFileBytes, pathName);
 	}
 
 	/**
-	 * Sends a DatagramPacket via the provided socket, or not (simulating packet
+	 * Transmits a DatagramPacket via the provided socket, or not (simulating packet
 	 * loss)
-	 * 
-	 * @param pkt         The packet to be send
-	 * @param socket      The socket to send the packet via
-	 * @param pktLossProb The probability that the packet gets lost
 	 */
 	public static void sendPacket(DatagramPacket pkt, DatagramSocket socket, double pktLossProb) throws IOException {
 		if (pktLossProb == 0) {
