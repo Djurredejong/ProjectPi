@@ -6,10 +6,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 
 import helper.Transfer;
 
 public class Client {
+	private static final int maxFileNameLength = 100;
 
 	private DatagramSocket socket;
 
@@ -31,26 +33,41 @@ public class Client {
 	}
 
 	public void start(int port) throws IOException {
+//		String fileName = "tiny.pdf";
+//		int recFileLength = 24286;
+//		String fileName = "medium.pdf";
+//		int recFileLength = 475231;
+//		String fileName = "large.pdf";
+//		int recFileLength = 31498458;
+		String fileName = "picture.png";
+		int recFileLength = 141270;
 
 		InetAddress address = InetAddress.getByName(null);
 
-		DatagramPacket request = new DatagramPacket(new byte[1], 1, address, port);
+		System.out.println("What do you want to do?");
+		String response = "d " + fileName;
 
-		socket.send(request);
+		byte[] reqBytes = new byte[maxFileNameLength + 2];
+
+		byte[] responseBytes = new byte[response.length()];
+		responseBytes = response.getBytes(StandardCharsets.UTF_8);
+
+		System.arraycopy(responseBytes, 0, reqBytes, 0, response.length());
+		for (int i = response.length(); i < reqBytes.length; i++) {
+			reqBytes[i] = 0;
+		}
+		System.out.println(reqBytes[0]);
+
+		DatagramPacket reqPkt = new DatagramPacket(reqBytes, reqBytes.length, address, port);
+
+		socket.send(reqPkt);
 		System.out.println("request sent");
 
-		// wait for the response on your request to receive a file
-		int recFileLength = 0;
-
-		String fileName = "tiny.pdf";
-		recFileLength = 24286;
-//		String fileName = "medium.pdf";
-//		recFileLength = 475231;
-//		String fileName = "large.pdf";
-//		recFileLength = 31498458;
+		// wait for the response on your request to receive a file; the file length will
+		// be in this response, so that receiveFile can be called
 
 		String filePath = System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName;
-		Transfer.receiveFile(filePath, recFileLength, socket, 0.9);
+		Transfer.receiveFile(filePath, recFileLength, socket, 0.05);
 	}
 
 }

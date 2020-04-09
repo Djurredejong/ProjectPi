@@ -34,7 +34,6 @@ public class Transfer {
 
 		byte[] bytesFile = Converter.fileToPacketByteArray(file);
 
-		int seqNr = 0;
 		int off = 0;
 		byte[] bytesSeq = new byte[2];
 
@@ -46,19 +45,18 @@ public class Transfer {
 
 			bytesSeq[0] = bytesFile[off];
 			bytesSeq[1] = bytesFile[off + 1];
-			seqNr = twoBytesToInt(bytesSeq);
-			System.out.println("Sent packet with sequence number " + seqNr + " of length " + pkt.getLength());
-
-			// When sending the very last packet and the ack for it gets lost, prevent
-			// getting stuck in an infinite loop!
+//			int seqNr = twoBytesToInt(bytesSeq);
+//			System.out.println("Sent packet with sequence number " + seqNr + " of length " + pkt.getLength());
 			if (off > (bytesFile.length - pktSize)) {
-
+				// When sending the very last packet and the ack for it gets lost, prevent
+				// getting stuck in an infinite loop!
+				receiveAck(pkt, socket, bytesSeq, pktLossProb);
 			} else {
 				receiveAck(pkt, socket, bytesSeq, pktLossProb);
 			}
-
 			off += pktSize;
 		}
+
 	}
 
 	/**
@@ -74,7 +72,7 @@ public class Transfer {
 			socket.receive(ack);
 			bytesAck[0] = ack.getData()[0];
 			bytesAck[1] = ack.getData()[1];
-			System.out.println("Received ack with sequence number " + twoBytesToInt(bytesAck));
+//			System.out.println("Received ack with sequence number " + twoBytesToInt(bytesAck));
 			recAck = true;
 		} catch (SocketTimeoutException e) {
 			recAck = false;
@@ -119,7 +117,7 @@ public class Transfer {
 			socket.receive(pkt);
 
 			seqNr = (pkt.getData()[0] << 8) | (pkt.getData()[1] & 0xFF);
-			System.out.println("Received packet with sequence number " + seqNr + " of length " + pkt.getLength());
+//			System.out.println("Received packet with sequence number " + seqNr + " of length " + pkt.getLength());
 
 			InetAddress address = pkt.getAddress();
 			int port = pkt.getPort();
@@ -141,9 +139,8 @@ public class Transfer {
 			bytesAck[1] = pkt.getData()[1];
 			DatagramPacket ack = new DatagramPacket(bytesAck, 2, address, port);
 			sendPacket(ack, socket, pktLossProb);
-			System.out.println("Sent ack with sequence number " + twoBytesToInt(bytesAck));
-
-			System.out.println("The offset is " + off);
+//			System.out.println("Sent ack with sequence number " + twoBytesToInt(bytesAck));
+//			System.out.println("The offset is " + off);
 		}
 		System.out.println("The file has been received!");
 		Converter.byteArrayToFile(recFileBytes, pathName);

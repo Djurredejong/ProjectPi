@@ -6,10 +6,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 
 import helper.Transfer;
 
 public class Server {
+	private static final int maxFileNameLength = 100;
 
 	private DatagramSocket socket;
 
@@ -32,21 +34,50 @@ public class Server {
 
 	public void service() throws IOException {
 
-		File file = new File("tiny.pdf");
+//		File file = new File("tiny.pdf");
 //		File file = new File("medium.pdf");
 //		File file = new File("large.pdf");
+//		File file = new File("picture.png");
 
-		while (true) {
-			DatagramPacket request = new DatagramPacket(new byte[1], 1);
-			socket.receive(request);
+		byte[] buf = new byte[maxFileNameLength + 2];
+		boolean quit = false;
 
-			InetAddress clientAddress = request.getAddress();
-			int clientPort = request.getPort();
+		while (!quit) {
+			DatagramPacket reqPkt = new DatagramPacket(buf, maxFileNameLength + 2);
+			socket.setSoTimeout(0);
+			socket.receive(reqPkt);
+			InetAddress clientAddress = reqPkt.getAddress();
+			int clientPort = reqPkt.getPort();
 
-			Transfer.sendFile(file, clientAddress, clientPort, socket, 0.1);
+			String fileName = null;
+			File file = null;
+			System.out.println(reqPkt.getData()[0]);
+			System.out.println(reqPkt.getData()[1]);
+			System.out.println(reqPkt.getData()[2]);
+			System.out.println(reqPkt.getData()[3]);
+			if (reqPkt.getLength() > 2 && reqPkt.getData()[2] != 0) {
+				fileName = new String(reqPkt.getData(), 2, maxFileNameLength, StandardCharsets.UTF_8);
+				fileName = fileName.trim();
+				file = new File(fileName);
+			}
+			System.out.println(fileName);
+
+			char reqNr = (char) reqPkt.getData()[0];
+			switch (reqNr) {
+			case ('d'):
+				Transfer.sendFile(file, clientAddress, clientPort, socket, 0.01);
+				break;
+			case ('q'):
+				// Client wants to quit the program
+				quit = true;
+			default:
+				System.out.println("Error: no valid command given in the received packet!");
+				break;
+			}
 
 			shutdown();
 		}
+		shutdown();
 
 	}
 
