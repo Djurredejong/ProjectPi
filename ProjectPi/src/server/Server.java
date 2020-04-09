@@ -34,11 +34,6 @@ public class Server {
 
 	public void service() throws IOException {
 
-//		File file = new File("tiny.pdf");
-//		File file = new File("medium.pdf");
-//		File file = new File("large.pdf");
-//		File file = new File("picture.png");
-
 		byte[] buf = new byte[maxFileNameLength + 2];
 		boolean quit = false;
 
@@ -61,20 +56,20 @@ public class Server {
 			char reqNr = (char) reqPkt.getData()[0];
 			switch (reqNr) {
 			case ('d'):
+				// Client wants to download the file named fileName
 				Transfer.sendFile(file, clientAddress, clientPort, socket, 0.01);
 				break;
 			case ('q'):
 				// Client wants to quit the program
+				System.out.println("Quitting the program");
 				quit = true;
+				break;
 			default:
 				System.out.println("Error: no valid command given in the received packet!");
 				break;
 			}
-
-			shutdown();
 		}
 		shutdown();
-
 	}
 
 	private void shutdown() {

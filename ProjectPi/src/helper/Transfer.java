@@ -38,7 +38,8 @@ public class Transfer {
 			bytesSize[i] = (byte) (file.length() >>> (i * 8));
 		}
 		DatagramPacket sizePkt = new DatagramPacket(bytesSize, 4, address, port);
-		sendPacket(sizePkt, socket);
+		// Do not let the size packet get lost:
+		sendPacket(sizePkt, socket, 0);
 
 		byte[] bytesFile = Converter.fileToPacketByteArray(file);
 
@@ -53,15 +54,16 @@ public class Transfer {
 
 			bytesSeq[0] = bytesFile[off];
 			bytesSeq[1] = bytesFile[off + 1];
+
 //			int seqNr = twoBytesToInt(bytesSeq);
 //			System.out.println("Sent packet with sequence number " + seqNr + " of length " + pkt.getLength());
+
 			if (off > (bytesFile.length - pktSize)) {
-				// When sending the very last packet and the ack for it gets lost, prevent
-				// getting stuck in an infinite loop!
-				receiveAck(pkt, socket, bytesSeq, pktLossProb);
-			} else {
-				receiveAck(pkt, socket, bytesSeq, pktLossProb);
+				// TODO When sending the very last packet and the ack for it gets lost, prevent
+				// getting stuck in an infinite loop! For ex. timer on the recursive function?
 			}
+			receiveAck(pkt, socket, bytesSeq, pktLossProb);
+
 			off += pktSize;
 		}
 
@@ -157,7 +159,13 @@ public class Transfer {
 			bytesAck[0] = pkt.getData()[0];
 			bytesAck[1] = pkt.getData()[1];
 			DatagramPacket ack = new DatagramPacket(bytesAck, 2, address, port);
-			sendPacket(ack, socket, pktLossProb);
+
+			if (off > (fileLength - pktSize)) {
+				// This was the very last packet, do not let the ack get lost:
+				sendPacket(ack, socket, 0);
+			} else {
+				sendPacket(ack, socket, pktLossProb);
+			}
 //			System.out.println("Sent ack with sequence number " + twoBytesToInt(bytesAck));
 //			System.out.println("The offset is " + off);
 		}
@@ -181,10 +189,6 @@ public class Transfer {
 				// The packet got lost!
 			}
 		}
-	}
-
-	public static void sendPacket(DatagramPacket pkt, DatagramSocket socket) throws IOException {
-		socket.send(pkt);
 	}
 
 	public static int twoBytesToInt(byte[] byteArray) {
