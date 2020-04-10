@@ -64,13 +64,20 @@ public class Server {
 				String filePath = System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName;
 				Transfer.receiveFile(filePath, socket, pktLossProb);
 				break;
+			case ('r'):
+				// Client wants to remove the file named fileName
+
+				break;
+			case ('l'):
+				// Client wants a list of files
+
+				break;
 			case ('q'):
 				// Client wants to quit the program
-				System.out.println("Quitting the program");
 				quit = true;
 				break;
 			default:
-				System.out.println("Error: no valid command given in the received packet!");
+				// Bit error in very first byte, don't do anything
 				break;
 			}
 		}
@@ -79,5 +86,6 @@ public class Server {
 
 	private void shutdown() {
 		socket.close();
+		System.exit(0);
 	}
 }

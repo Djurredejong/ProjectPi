@@ -19,9 +19,11 @@ public class TUI {
 	public void start() throws IOException {
 		String input;
 		while (true) {
-			System.out.println(
-					"Type <d <filename>> for download, <u <filename>> for upload, <r <filename>> for removal,");
-			System.out.println("<l> for a list of files, <s> for statistics, or <q> to quit.");
+			System.out.println("Type <d <filename>> for download,");
+			System.out.println("     <u <filename>> for upload,");
+			System.out.println("     <r <filename>> for removal,");
+			System.out.println("     <l> for a list of files,");
+			System.out.println(" or  <q> to quit.");
 			input = in.readLine();
 			handleInput(input);
 		}
@@ -51,6 +53,7 @@ public class TUI {
 				if (fileName == null) {
 					System.out.println("If you want to download a file, please provide the name of that file as well.");
 				} else {
+					System.out.println(fileName + " will now be downloaded.");
 					client.download(fileName);
 				}
 				break;
@@ -58,6 +61,7 @@ public class TUI {
 				if (fileName == null) {
 					System.out.println("If you want to upload a file, please provide the name of that file as well.");
 				} else {
+					System.out.println(fileName + " will now be uploaded.");
 					client.upload(fileName);
 				}
 				break;
@@ -65,14 +69,13 @@ public class TUI {
 				if (fileName == null) {
 					System.out.println("If you want to remove a file, please provide the name of that file as well.");
 				} else {
+					System.out.println(fileName + " will now be removed.");
 					client.remove(fileName);
 				}
 				break;
 			case ('l'):
+				System.out.println("These are the files currently on the Raspberry Pi:");
 				client.listFiles();
-				break;
-			case ('s'):
-				client.showStats();
 				break;
 			case ('q'):
 				client.quit();

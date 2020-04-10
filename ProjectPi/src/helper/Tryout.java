@@ -1,5 +1,6 @@
 package helper;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -10,6 +11,15 @@ public class Tryout {
 	public static void main(String[] args) {
 //		testFileInputStream();
 //		testBytesToStrings();
+		testListFiles();
+	}
+
+	private static void testListFiles() {
+		File file = new File(srcPath);
+		File[] files = file.listFiles();
+		for (File f : files) {
+			System.out.println(f.getName());
+		}
 	}
 
 	private static void testBytesToStrings() {

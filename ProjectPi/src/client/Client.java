@@ -44,29 +44,38 @@ public class Client {
 
 	public void download(String fileName) throws IOException {
 		sendRequest("d " + fileName);
+		System.out.println(fileName + " will now be downloaded!");
 		String filePath = System.getProperty("user.dir") + File.separator + fileName;
 		Transfer.receiveFile(filePath, socket, pktLossProb);
-		System.out.println("The file has been downloaded!");
+		System.out.println(fileName + " has been downloaded!");
 	}
 
 	public void upload(String fileName) throws IOException {
 		sendRequest("u " + fileName);
+		System.out.println(fileName + " will now be uploaded!");
 		File file = new File(fileName);
 		Transfer.sendFile(file, address, port, socket, pktLossProb);
-		System.out.println("The file has been uploaded!");
+		System.out.println(fileName + " has been uploaded!");
 	}
 
-	public void remove(String fileName) {
+	public void remove(String fileName) throws IOException {
+		sendRequest("r " + fileName);
+		System.out.println(fileName + " will now be removed!");
 	}
 
-	public void listFiles() {
-	}
+	public void listFiles() throws IOException {
+		sendRequest("l");
+		String tempFilePath = System.getProperty("user.dir") + File.separator + "tempList";
+		// received a text file containing the names of all files on the Pi, print
+		// these:
 
-	public void showStats() {
+		Transfer.receiveFile(tempFilePath, socket, pktLossProb);
+		remove(tempFilePath);
 	}
 
 	public void quit() throws IOException {
 		sendRequest("q");
+		System.out.println("Goodbye!");
 		shutdown();
 	}
 
@@ -86,8 +95,8 @@ public class Client {
 	}
 
 	private void shutdown() {
-		System.out.println("You chose to quit. The connection will be terminated.");
 		socket.close();
+		System.exit(0);
 	}
 
 }
