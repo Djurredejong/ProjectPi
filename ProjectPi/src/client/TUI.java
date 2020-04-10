@@ -3,26 +3,25 @@ package client;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 
 public class TUI {
+	private static final int maxFileNameLength = 100;
 
 	private BufferedReader in;
-	private PrintWriter out;
 
 	private Client client;
 
 	public TUI(Client client) {
 		this.client = client;
 		in = new BufferedReader(new InputStreamReader(System.in));
-		out = new PrintWriter(System.out, true);
 	}
 
 	public void start() throws IOException {
 		String input;
 		while (true) {
-			out.write("Type d filename for download, u filename for upload, r filename to remmove,");
-			out.write(" l for a list of files, s for statistics, or q to quit.");
+			System.out.println(
+					"Type <d <filename>> for download, <u <filename>> for upload, <r <filename>> for removal,");
+			System.out.println("<l> for a list of files, <s> for statistics, or <q> to quit.");
 			input = in.readLine();
 			handleInput(input);
 		}
@@ -37,6 +36,11 @@ public class TUI {
 
 		if (split.length > 1) {
 			fileName = split[1];
+			if (fileName.length() > 100) {
+				System.out.println(
+						"Sorry, the name of the file can be at most " + maxFileNameLength + " characters long.");
+				return;
+			}
 		}
 
 		if (cmd.length() == 1) {
@@ -45,21 +49,21 @@ public class TUI {
 			switch (command) {
 			case ('d'):
 				if (fileName == null) {
-					out.write("If you want to download a file, please provide the name of that file as well.");
+					System.out.println("If you want to download a file, please provide the name of that file as well.");
 				} else {
 					client.download(fileName);
 				}
 				break;
 			case ('u'):
 				if (fileName == null) {
-					out.write("If you want to upload a file, please provide the name of that file as well.");
+					System.out.println("If you want to upload a file, please provide the name of that file as well.");
 				} else {
 					client.upload(fileName);
 				}
 				break;
 			case ('r'):
 				if (fileName == null) {
-					out.write("If you want to remove a file, please provide the name of that file as well.");
+					System.out.println("If you want to remove a file, please provide the name of that file as well.");
 				} else {
 					client.remove(fileName);
 				}
@@ -74,12 +78,12 @@ public class TUI {
 				client.quit();
 				break;
 			default:
-				out.write("Please provide one of the valid command characters.");
+				System.out.println("Please provide one of the valid command characters.");
 				break;
 			}
 
 		} else {
-			out.write("Please provide only one command character, followed by a space or nothing.");
+			System.out.println("Please provide only one command character, followed by a space or nothing.");
 		}
 	}
 }

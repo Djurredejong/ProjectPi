@@ -171,7 +171,7 @@ public class Transfer {
 		}
 
 		// Finally, convert all the received data from the packets into the file
-		System.out.println("The file has been received!");
+//		System.out.println("The file has been received!");
 		Converter.byteArrayToFile(recFileBytes, pathName);
 	}
 

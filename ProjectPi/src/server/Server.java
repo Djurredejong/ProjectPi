@@ -12,6 +12,7 @@ import helper.Transfer;
 
 public class Server {
 	private static final int maxFileNameLength = 100;
+	private static final double pktLossProb = 0.01;
 
 	private DatagramSocket socket;
 
@@ -51,13 +52,17 @@ public class Server {
 				fileName = fileName.trim();
 				file = new File(fileName);
 			}
-			System.out.println(fileName);
 
 			char reqNr = (char) reqPkt.getData()[0];
 			switch (reqNr) {
 			case ('d'):
 				// Client wants to download the file named fileName
-				Transfer.sendFile(file, clientAddress, clientPort, socket, 0.01);
+				Transfer.sendFile(file, clientAddress, clientPort, socket, pktLossProb);
+				break;
+			case ('u'):
+				// Client wants to upload the file named fileName
+				String filePath = System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName;
+				Transfer.receiveFile(filePath, socket, pktLossProb);
 				break;
 			case ('q'):
 				// Client wants to quit the program

@@ -12,8 +12,11 @@ import helper.Transfer;
 
 public class Client {
 	private static final int maxFileNameLength = 100;
+	private static final double pktLossProb = 0.01;
 
 	private DatagramSocket socket;
+	private InetAddress address;
+	private int port;
 
 	private TUI tui;
 
@@ -23,11 +26,9 @@ public class Client {
 	}
 
 	public static void main(String[] args) {
-		System.out.println("Hello");
 		try {
-			Client client = new Client();
 			int port = 9999;
-			client.start(port);
+			(new Client()).start(port);
 		} catch (SocketException e) {
 			System.out.println("Socket error: " + e.getMessage());
 		} catch (IOException e) {
@@ -36,48 +37,23 @@ public class Client {
 	}
 
 	public void start(int port) throws IOException {
-//		String fileName = "tiny.pdf";
-//		int recFileLength = 24286;
-		String fileName = "medium.pdf";
-//		int recFileLength = 475231;
-//		String fileName = "large.pdf";
-//		int recFileLength = 31498458;
-//		String fileName = "picture.png";
-
-		InetAddress address = InetAddress.getByName(null);
+		this.address = InetAddress.getByName(null);
+		this.port = port;
 		tui.start();
-
-		System.out.println("What do you want to do?");
-//		String response = "d " + fileName;
-		String response = "q";
-
-		byte[] reqBytes = new byte[maxFileNameLength + 2];
-
-		byte[] responseBytes = new byte[response.length()];
-		responseBytes = response.getBytes(StandardCharsets.UTF_8);
-
-		System.arraycopy(responseBytes, 0, reqBytes, 0, response.length());
-		for (int i = response.length(); i < reqBytes.length; i++) {
-			reqBytes[i] = 0;
-		}
-		System.out.println(reqBytes[0]);
-
-		DatagramPacket reqPkt = new DatagramPacket(reqBytes, reqBytes.length, address, port);
-
-		socket.send(reqPkt);
-		System.out.println("request sent");
-
-		// wait for the response on your request to receive a file; the file length will
-		// be in this response, so that receiveFile can be called
-
 	}
 
 	public void download(String fileName) throws IOException {
-		String filePath = System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName;
-		Transfer.receiveFile(filePath, socket, 0.05);
+		sendRequest("d " + fileName);
+		String filePath = System.getProperty("user.dir") + File.separator + fileName;
+		Transfer.receiveFile(filePath, socket, pktLossProb);
+		System.out.println("The file has been downloaded!");
 	}
 
-	public void upload(String fileName) {
+	public void upload(String fileName) throws IOException {
+		sendRequest("u " + fileName);
+		File file = new File(fileName);
+		Transfer.sendFile(file, address, port, socket, pktLossProb);
+		System.out.println("The file has been uploaded!");
 	}
 
 	public void remove(String fileName) {
@@ -89,7 +65,29 @@ public class Client {
 	public void showStats() {
 	}
 
-	public void quit() {
+	public void quit() throws IOException {
+		sendRequest("q");
+		shutdown();
+	}
+
+	private void sendRequest(String request) throws IOException {
+		byte[] reqBytes = new byte[maxFileNameLength + 2];
+
+		byte[] fileNameBytes = new byte[request.length()];
+		fileNameBytes = request.getBytes(StandardCharsets.UTF_8);
+
+		System.arraycopy(fileNameBytes, 0, reqBytes, 0, request.length());
+		for (int i = request.length(); i < reqBytes.length; i++) {
+			reqBytes[i] = 0;
+		}
+
+		DatagramPacket reqPkt = new DatagramPacket(reqBytes, reqBytes.length, address, port);
+		socket.send(reqPkt);
+	}
+
+	private void shutdown() {
+		System.out.println("You chose to quit. The connection will be terminated.");
+		socket.close();
 	}
 
 }
