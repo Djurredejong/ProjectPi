@@ -295,9 +295,14 @@ public class Transfer {
 
 		// Finally, show some statistics and convert all the received data from the
 		// packets into the file
+		long timeTaken = System.nanoTime() - startTime - pauseTotalTime;
 		System.out.println();
 		System.out.println("The file has been downloaded!");
-		System.out.println("It has taken " + nanoToTime(System.nanoTime() - startTime - pauseTotalTime));
+		System.out.println("It has taken " + nanoToTime(timeTaken));
+		System.out.println("fileLength = " + fileLength);
+		System.out.println("timeTaken = " + timeTaken);
+		System.out.println("The download speed was "
+				+ String.format("%.2f", (8000 * (double) fileLength / (double) timeTaken)) + " Mbps");
 		System.out.println("UNKNOWN" + " times a packet had to be retransmitted.");
 		Converter.byteArrayToFile(recFileBytes, pathName);
 	}
@@ -326,8 +331,8 @@ public class Transfer {
 					break;
 				case ('s'):
 					System.out.println("Some statistics regarding the download:");
-					System.out.println("The total transmission time is "
-							+ nanoToTime(System.nanoTime() - startTime - pauseTotalTime));
+					long timePassed = System.nanoTime() - startTime - pauseTotalTime;
+					System.out.println("The total transmission time is " + nanoToTime(timePassed));
 					System.out.println(recPackets + " out of " + packetsToRec + " have been succesfully received.");
 					System.out.println("UNKNOWN" + " times a packet had to be retransmitted.");
 					break;
