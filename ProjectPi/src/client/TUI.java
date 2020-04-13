@@ -19,6 +19,8 @@ public class TUI {
 		printMenu();
 		String input;
 		while (true) {
+			System.out.println();
+			System.out.println("Ready for the next command.");
 			input = in.readLine();
 			handleInput(input);
 		}
@@ -96,6 +98,16 @@ public class TUI {
 		System.out.println("     <r <filename>> for removal,");
 		System.out.println("     <l> for a list of files,");
 		System.out.println("     <m> for this menu,");
-		System.out.println(" or  <q> to quit.");
+		System.out.println(" or  <q> to quit,");
+		System.out.println("\"Press the Return key after typing your command.");
+	}
+
+	/**
+	 * Client needs to pass the user input to Transfer when downloading a file, in
+	 * order for the user to be able to pause/resume the download, and for
+	 * requesting statistics
+	 */
+	public BufferedReader getIn() {
+		return in;
 	}
 }

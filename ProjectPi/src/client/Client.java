@@ -49,7 +49,7 @@ public class Client {
 //		System.out.println(fileName + " will now be downloaded!");
 //		String filePath = System.getProperty("user.dir") + File.separator + "testDownload" + File.separator + fileName;
 		String filePath = System.getProperty("user.dir") + File.separator + fileName;
-		Transfer.receiveFile(filePath, socket, pktLossProb);
+		Transfer.receiveFile(filePath, socket, pktLossProb, tui.getIn());
 		System.out.println(fileName + " has been downloaded!");
 	}
 
@@ -109,7 +109,7 @@ public class Client {
 	}
 
 	/**
-	 * TUI needs to know the max. lenght of the name of a file
+	 * TUI needs to know the max. length of the name of a file
 	 */
 	public int getMaxFileNameLength() {
 		return maxFileNameLength;

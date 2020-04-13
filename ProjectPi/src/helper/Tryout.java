@@ -11,7 +11,17 @@ public class Tryout {
 	public static void main(String[] args) {
 //		testFileInputStream();
 //		testBytesToStrings();
-		testListFiles();
+//		testListFiles();
+		testNanoToTime();
+	}
+
+	private static void testNanoToTime() {
+		long nanos = 100000000000000L;
+		long totalSec = nanos / (1000 * 1000 * 1000);
+		long sec = totalSec % 60;
+		long min = (totalSec / 60) % 60;
+		long hour = (totalSec / (60 * 60)) % 24;
+		System.out.println(hour + " hours, " + min + " minutes, and " + sec + " seconds");
 	}
 
 	private static void testListFiles() {
