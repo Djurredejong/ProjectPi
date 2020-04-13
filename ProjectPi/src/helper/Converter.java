@@ -9,18 +9,19 @@ import java.io.IOException;
 public class Converter {
 
 	/**
-	 * Reads the enitre file at once
+	 * Reads the entire file at once
 	 */
 	public static byte[] fileToBytes(File file) {
 		return fileToBytes(file, (int) file.length(), false, false);
 	}
 
 	/**
-	 * Convert a file to an array of bytes in which each block of 514 bytes (seq nr,
-	 * checksum value, 512 bytes of data) represents one packet to be send
+	 * Convert a file to an array of bytes in which each block of "header" + mtu
+	 * bytes (seq nr, checksum value, mtu bytes of data) represents one packet to be
+	 * send
 	 */
 	public static byte[] fileToPacketByteArray(File file) {
-		return fileToBytes(file, 512, true, true);
+		return fileToBytes(file, Transfer.getMTU(), true, true);
 	}
 
 	/**
@@ -44,36 +45,44 @@ public class Converter {
 
 		int len = (int) file.length();
 		if (withSeqNr || withChecksum) {
-			len += 4 * (len / readSize + 1);
+			len += Transfer.getHeadSize() * (len / readSize + 1);
 		}
 		byte[] byteArray = new byte[len];
 
 		int off = 0;
 		int seqNr = 0;
 		int checksum = 0;
-		// TODO implement checksum value for data integrity
-//		if (withSeqNr || withChecksum) {
-//			seqNr = (int) (Math.random() * 65536);
-//		}
+
+		int maxSeqNr = (int) (Math.pow(2, (8 * 2)) / 2);
 
 		while (off < len) {
 
 			if (withSeqNr || withChecksum) {
 				byteArray[off] = (byte) ((seqNr >>> 8) & 0xFF);
 				byteArray[off + 1] = (byte) (seqNr & 0xFF);
-				// TODO calculate checksum
-				byteArray[off + 2] = (byte) ((checksum >>> 8) & 0xFF);
-				byteArray[off + 3] = (byte) (checksum & 0xFF);
-				off += 4;
+//				byteArray[off + 2] = (byte) ((checksum >>> 8) & 0xFF);
+//				byteArray[off + 3] = (byte) (checksum & 0xFF);
+				off += Transfer.getHeadSize();
 				seqNr++;
-				if (seqNr == 32768) {
+				if (seqNr == maxSeqNr) {
 					seqNr = 0;
 				}
 			}
 
 			try {
 				fis.read(byteArray, off, Math.min(readSize, (len - off)));
-//				System.out.println("reading bytes " + off + " to " + (off + Math.min(readSize, (len - off))));
+				if (withChecksum) {
+					// Calculate the checksum for the part that has just been read
+					// and update the last two checksum bytes
+					byte[] dataArray = new byte[Math.min(readSize, (len - off))];
+					System.arraycopy(byteArray, off, dataArray, 0, Math.min(readSize, (len - off)));
+					checksum = calcChecksum(dataArray);
+					byteArray[off - 2] = (byte) ((checksum >>> 8) & 0xFF);
+					byteArray[off - 1] = (byte) (checksum & 0xFF);
+				} else {
+					byteArray[off - 2] = 0;
+					byteArray[off - 1] = 0;
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -87,6 +96,10 @@ public class Converter {
 			e.printStackTrace();
 		}
 		return byteArray;
+	}
+
+	private static int calcChecksum(byte[] dataArray) {
+		return 0;
 	}
 
 	/**

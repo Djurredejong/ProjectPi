@@ -99,7 +99,7 @@ public class TUI {
 		System.out.println("     <l> for a list of files,");
 		System.out.println("     <m> for this menu,");
 		System.out.println(" or  <q> to quit,");
-		System.out.println("\"Press the Return key after typing your command.");
+		System.out.println("Press the Return key after typing your command.");
 	}
 
 	/**

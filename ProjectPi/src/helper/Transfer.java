@@ -55,14 +55,10 @@ public class Transfer {
 
 			bytesSeq[0] = bytesFile[off];
 			bytesSeq[1] = bytesFile[off + 1];
-
-//			int seqNr = twoBytesToInt(bytesSeq);
-//			System.out.println("Sent packet with sequence number " + seqNr + " of length " + pkt.getLength());
-
-			if (off > (bytesFile.length - pktSize)) {
-				// TODO When sending the very last packet and the ack for it gets lost, prevent
-				// getting stuck in an infinite loop! For ex. timer on the recursive function?
-			}
+//			if (off > (bytesFile.length - pktSize)) {
+//				// TODO When sending the very last packet and the ack for it gets lost, prevent
+//				// getting stuck in an infinite loop -> Timer on the recursive function.
+//			}
 			receiveAck(pkt, socket, bytesSeq, pktLossProb);
 
 			off += pktSize;
@@ -130,6 +126,7 @@ public class Transfer {
 		int off = 0;
 		int prevSeqNr = -1;
 		int seqNr = -1;
+		int maxSeqNr = (int) (Math.pow(2, (8 * 2)) / 2);
 
 		while (off < fileLength) {
 			prevSeqNr = seqNr;
@@ -146,7 +143,7 @@ public class Transfer {
 			if (seqNr == prevSeqNr) {
 				// In case the packet is the same as the last one we received, we do not copy
 				// the data of the received packet into recFileBytes
-			} else if (seqNr == prevSeqNr + 1 || (prevSeqNr == 32767 && seqNr == 0)) {
+			} else if (seqNr == prevSeqNr + 1 || (prevSeqNr == (maxSeqNr - 1) && seqNr == 0)) {
 				// In case the packet is not the same as the last one we received, we copy the
 				// data of the received packet into recFileBytes
 				System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (fileLength - off)));
@@ -202,9 +199,11 @@ public class Transfer {
 		int off = 0;
 		int prevSeqNr = -1;
 		int seqNr = -1;
+		int maxSeqNr = (int) (Math.pow(2, (8 * 2)) / 2);
 
 		long startTime = System.nanoTime();
 		long pauseTotalTime = 0;
+		System.out.println();
 		System.out.println("Downloading has begun. At any time during this process, you can");
 		System.out.println("type <p> to pause downloading the file,");
 		System.out.println(" or  <s> to show some statistics regarding the download.");
@@ -229,10 +228,13 @@ public class Transfer {
 
 			InetAddress address = pkt.getAddress();
 			int port = pkt.getPort();
+
+//			System.out.println("The seqNr is " + seqNr);
+
 			if (seqNr == prevSeqNr) {
 				// In case the packet is the same as the last one we received, we do not copy
 				// the data of the received packet into recFileBytes
-			} else if (seqNr == prevSeqNr + 1 || (prevSeqNr == 32767 && seqNr == 0)) {
+			} else if (seqNr == prevSeqNr + 1 || (prevSeqNr == (maxSeqNr - 1) && seqNr == 0)) {
 				// In case the packet is not the same as the last one we received, we copy the
 				// data of the received packet into recFileBytes
 				System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (fileLength - off)));
@@ -317,7 +319,7 @@ public class Transfer {
 			return (min + ((min == 1) ? " minute" : " minutes") + " and " + sec
 					+ ((sec == 1) ? " second." : " seconds."));
 		} else {
-			return (hour + ((hour == 1) ? " hour, " : " hours, ") + +min + ((min == 1) ? " minute, " : " minutes, ")
+			return (hour + ((hour == 1) ? " hour, " : " hours, ") + min + ((min == 1) ? " minute, " : " minutes, ")
 					+ " and " + sec + ((sec == 1) ? " second." : " seconds."));
 		}
 	}
@@ -345,6 +347,20 @@ public class Transfer {
 	public static int fourBytesToInt(byte[] byteArray) {
 		return ((byteArray[3] & 0xFF) << 24) | ((byteArray[2] & 0xFF) << 16) | ((byteArray[1] & 0xFF) << 8)
 				| ((byteArray[0] & 0xFF) << 0);
+	}
+
+	/**
+	 * Converter needs to know this when converting file to packets
+	 */
+	public static int getMTU() {
+		return mtu;
+	}
+
+	/**
+	 * Converter needs to know this when converting file to packets
+	 */
+	public static int getHeadSize() {
+		return headSize;
 	}
 
 }

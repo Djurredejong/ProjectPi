@@ -14,7 +14,7 @@ import helper.Transfer;
 
 public class Client {
 	private static final int maxFileNameLength = 100;
-	private static final double pktLossProb = 0.01;
+	private static final double pktLossProb = 0;
 
 	private DatagramSocket socket;
 	private InetAddress address;
@@ -50,7 +50,7 @@ public class Client {
 //		String filePath = System.getProperty("user.dir") + File.separator + "testDownload" + File.separator + fileName;
 		String filePath = System.getProperty("user.dir") + File.separator + fileName;
 		Transfer.receiveFile(filePath, socket, pktLossProb, tui.getIn());
-		System.out.println(fileName + " has been downloaded!");
+//		System.out.println(fileName + " has been downloaded!");
 	}
 
 	public void upload(String fileName) throws IOException {
