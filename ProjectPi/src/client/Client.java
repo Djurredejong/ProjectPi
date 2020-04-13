@@ -14,7 +14,7 @@ import helper.Transfer;
 
 public class Client {
 	private static final int maxFileNameLength = 100;
-	private static final double pktLossProb = 0;
+	private static final double pktLossProb = 0.001;
 
 	private DatagramSocket socket;
 	private InetAddress address;
@@ -41,6 +41,8 @@ public class Client {
 	public void start(int port) throws IOException {
 		this.address = InetAddress.getByName(null);
 		this.port = port;
+		System.out.println("The connection has been established.");
+		System.out.println();
 		tui.start();
 	}
 
