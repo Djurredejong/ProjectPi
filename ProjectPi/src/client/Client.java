@@ -108,4 +108,11 @@ public class Client {
 		System.exit(0);
 	}
 
+	/**
+	 * TUI needs to know the max. lenght of the name of a file
+	 */
+	public int getMaxFileNameLength() {
+		return maxFileNameLength;
+	}
+
 }

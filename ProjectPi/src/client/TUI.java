@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class TUI {
-	private static final int maxFileNameLength = 100;
 
 	private BufferedReader in;
 
@@ -35,8 +34,8 @@ public class TUI {
 		if (split.length > 1) {
 			fileName = split[1];
 			if (fileName.length() > 100) {
-				System.out.println(
-						"Sorry, the name of the file can be at most " + maxFileNameLength + " characters long.");
+				System.out.println("Sorry, the name of the file can be at most " + client.getMaxFileNameLength()
+						+ " characters long.");
 				return;
 			}
 		}
