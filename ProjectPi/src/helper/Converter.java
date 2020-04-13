@@ -80,8 +80,8 @@ public class Converter {
 					byteArray[off - 2] = (byte) ((checksum >>> 8) & 0xFF);
 					byteArray[off - 1] = (byte) (checksum & 0xFF);
 				} else {
-					byteArray[off - 2] = 0;
-					byteArray[off - 1] = 0;
+					byteArray[off - 2] = (byte) 0;
+					byteArray[off - 1] = (byte) 0;
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -98,8 +98,16 @@ public class Converter {
 		return byteArray;
 	}
 
-	private static int calcChecksum(byte[] dataArray) {
-		return 0;
+	public static int calcChecksum(byte[] dataArray) {
+		int checksum = 0;
+		byte[] tempArray = new byte[2];
+		for (int i = 0; i < dataArray.length - 1; i += 2) {
+			tempArray[0] = dataArray[i];
+			tempArray[1] = dataArray[i + 1];
+			checksum += Transfer.twoBytesToInt(tempArray);
+		}
+		checksum = checksum & 32767;
+		return checksum;
 	}
 
 	/**

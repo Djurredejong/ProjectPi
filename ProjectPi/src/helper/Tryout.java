@@ -12,7 +12,13 @@ public class Tryout {
 //		testFileInputStream();
 //		testBytesToStrings();
 //		testListFiles();
-		testNanoToTime();
+//		testNanoToTime();
+		testBitwiseOps();
+	}
+
+	private static void testBitwiseOps() {
+		System.out.println(Integer.toBinaryString(65535));
+		System.out.println(1899554 & 65535);
 	}
 
 	private static void testNanoToTime() {

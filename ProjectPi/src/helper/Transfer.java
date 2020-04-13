@@ -145,9 +145,26 @@ public class Transfer {
 				// the data of the received packet into recFileBytes
 			} else if (seqNr == prevSeqNr + 1 || (prevSeqNr == (maxSeqNr - 1) && seqNr == 0)) {
 				// In case the packet is not the same as the last one we received, we copy the
-				// data of the received packet into recFileBytes
-				System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (fileLength - off)));
-				off += mtu;
+				// data of the received packet into recFileBytes, provided that we do not need
+				// to discard the package due to the checksum telling us there has been a bit
+				// error
+				byte[] checksumArray = new byte[2];
+				checksumArray[0] = pkt.getData()[3];
+				checksumArray[1] = pkt.getData()[2];
+				int expChecksum = twoBytesToInt(checksumArray);
+
+				byte[] dataArray = new byte[Math.min(mtu, (fileLength - off))];
+				System.arraycopy(pkt.getData(), headSize, dataArray, 0, Math.min(mtu, (fileLength - off)));
+				int checksum = Converter.calcChecksum(dataArray);
+
+				if (expChecksum == checksum) {
+					System.arraycopy(dataArray, 0, recFileBytes, off, Math.min(mtu, (fileLength - off)));
+					off += mtu;
+				} else {
+					// If the checksum tells us that there is a bit error, we discard the package
+					// and inform the sender about this by setting the seqNr equal to the prevSeqNr
+					seqNr = prevSeqNr;
+				}
 			} else {
 				System.out.println("Error: very unexpected sequence number");
 			}
@@ -236,9 +253,26 @@ public class Transfer {
 				// the data of the received packet into recFileBytes
 			} else if (seqNr == prevSeqNr + 1 || (prevSeqNr == (maxSeqNr - 1) && seqNr == 0)) {
 				// In case the packet is not the same as the last one we received, we copy the
-				// data of the received packet into recFileBytes
-				System.arraycopy(pkt.getData(), headSize, recFileBytes, off, Math.min(mtu, (fileLength - off)));
-				off += mtu;
+				// data of the received packet into recFileBytes, provided that we do not need
+				// to discard the package due to the checksum telling us there has been a bit
+				// error
+				byte[] checksumArray = new byte[2];
+				checksumArray[0] = pkt.getData()[3];
+				checksumArray[1] = pkt.getData()[2];
+				int expChecksum = twoBytesToInt(checksumArray);
+
+				byte[] dataArray = new byte[Math.min(mtu, (fileLength - off))];
+				System.arraycopy(pkt.getData(), headSize, dataArray, 0, Math.min(mtu, (fileLength - off)));
+				int checksum = Converter.calcChecksum(dataArray);
+
+				if (expChecksum == checksum) {
+					System.arraycopy(dataArray, 0, recFileBytes, off, Math.min(mtu, (fileLength - off)));
+					off += mtu;
+				} else {
+					// If the checksum tells us that there is a bit error, we discard the package
+					// and inform the sender about this by setting the seqNr equal to the prevSeqNr
+					seqNr = prevSeqNr;
+				}
 			} else {
 				System.out.println("Error: very unexpected sequence number.");
 			}
