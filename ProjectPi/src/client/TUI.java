@@ -17,13 +17,9 @@ public class TUI {
 	}
 
 	public void start() throws IOException {
+		printMenu();
 		String input;
 		while (true) {
-			System.out.println("Type <d <filename>> for download,");
-			System.out.println("     <u <filename>> for upload,");
-			System.out.println("     <r <filename>> for removal,");
-			System.out.println("     <l> for a list of files,");
-			System.out.println(" or  <q> to quit.");
 			input = in.readLine();
 			handleInput(input);
 		}
@@ -71,13 +67,16 @@ public class TUI {
 				if (fileName == null) {
 					System.out.println("If you want to remove a file, please provide the name of that file as well.");
 				} else {
-					System.out.println(fileName + " will now be removed.");
+					System.out.println(fileName + " will now be removed (provided the file exists).");
 					client.remove(fileName);
 				}
 				break;
 			case ('l'):
 				System.out.println("These are the files currently on the Raspberry Pi:");
 				client.listFiles();
+				break;
+			case ('m'):
+				printMenu();
 				break;
 			case ('q'):
 				client.quit();
@@ -90,5 +89,14 @@ public class TUI {
 		} else {
 			System.out.println("Please provide only one command character, followed by a space or nothing.");
 		}
+	}
+
+	public void printMenu() {
+		System.out.println("Type <d <filename>> for download,");
+		System.out.println("     <u <filename>> for upload,");
+		System.out.println("     <r <filename>> for removal,");
+		System.out.println("     <l> for a list of files,");
+		System.out.println("     <m> for this menu,");
+		System.out.println(" or  <q> to quit.");
 	}
 }

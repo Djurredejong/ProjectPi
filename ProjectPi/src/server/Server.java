@@ -69,11 +69,14 @@ public class Server {
 				break;
 			case ('r'):
 				// Client wants to remove the file named fileName
-
+				File delFile = new File(fileName);
+				delFile.delete();
 				break;
 			case ('l'):
 				// Client wants a list of files
 				Transfer.sendFile(listFiles(), clientAddress, clientPort, socket, pktLossProb);
+				File tempFile = new File("listFilesTemp.txt");
+				tempFile.delete();
 				break;
 			case ('q'):
 				// Client wants to quit the program
