@@ -80,6 +80,7 @@ public class Client {
 			System.out.println(fileName);
 		}
 		br.close();
+		// delete the temp file
 		File tempFile = new File("listFilesTemp.txt");
 		tempFile.delete();
 	}

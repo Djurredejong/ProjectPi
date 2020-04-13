@@ -34,8 +34,8 @@ public class Transfer {
 			throws IOException {
 
 		// First, send file info (size)
-		byte[] bytesSize = new byte[4];
-		for (int i = 0; i < 4; i++) {
+		byte[] bytesSize = new byte[6];
+		for (int i = 0; i < 6; i++) {
 			bytesSize[i] = (byte) (file.length() >>> (i * 8));
 		}
 		DatagramPacket sizePkt = new DatagramPacket(bytesSize, 4, address, port);
@@ -112,11 +112,11 @@ public class Transfer {
 		DatagramPacket sizePkt = new DatagramPacket(new byte[4], 4);
 		socket.setSoTimeout(0);
 		socket.receive(sizePkt);
-		byte[] bytesSize = new byte[4];
+		byte[] bytesSize = new byte[6];
 		for (int i = 0; i < sizePkt.getLength(); i++) {
 			bytesSize[i] = sizePkt.getData()[i];
 		}
-		int fileLength = fourBytesToInt(bytesSize);
+		int fileLength = sixBytesToInt(bytesSize);
 //		System.out.println("the filelength is " + fileLength);
 
 		// Next, receive the packets that make up the file
@@ -202,11 +202,11 @@ public class Transfer {
 		DatagramPacket sizePkt = new DatagramPacket(new byte[4], 4);
 		socket.setSoTimeout(0);
 		socket.receive(sizePkt);
-		byte[] bytesSize = new byte[4];
+		byte[] bytesSize = new byte[6];
 		for (int i = 0; i < sizePkt.getLength(); i++) {
 			bytesSize[i] = sizePkt.getData()[i];
 		}
-		int fileLength = fourBytesToInt(bytesSize);
+		int fileLength = sixBytesToInt(bytesSize);
 //		System.out.println("the filelength is " + fileLength);
 
 		// Next, receive the packets that make up the file
@@ -381,6 +381,11 @@ public class Transfer {
 	public static int fourBytesToInt(byte[] byteArray) {
 		return ((byteArray[3] & 0xFF) << 24) | ((byteArray[2] & 0xFF) << 16) | ((byteArray[1] & 0xFF) << 8)
 				| ((byteArray[0] & 0xFF) << 0);
+	}
+
+	public static int sixBytesToInt(byte[] byteArray) {
+		return ((byteArray[5] & 0xFF) << 40) | ((byteArray[4] & 0xFF) << 32) | ((byteArray[3] & 0xFF) << 24)
+				| ((byteArray[2] & 0xFF) << 16) | ((byteArray[1] & 0xFF) << 8) | ((byteArray[0] & 0xFF) << 0);
 	}
 
 	/**

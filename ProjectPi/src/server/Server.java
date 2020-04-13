@@ -75,8 +75,9 @@ public class Server {
 			case ('l'):
 				// Client wants a list of files
 				Transfer.sendFile(listFiles(), clientAddress, clientPort, socket, pktLossProb);
-				File tempFile = new File("listFilesTemp.txt");
-				tempFile.delete();
+				// delete the temp file on the server (not when running server locally!)
+//				File tempFile = new File("listFilesTemp.txt");
+//				tempFile.delete();
 				break;
 			case ('q'):
 				// Client wants to quit the program
@@ -98,7 +99,7 @@ public class Server {
 		File listFiles = new File("listFilesTemp.txt");
 
 		for (File f : files) {
-			if (f.isFile() && !f.equals(listFiles)) {
+			if (f.isFile() && !(f.getName().contentEquals("listFilesTemp.txt"))) {
 				results.add(f.getName());
 			}
 		}
