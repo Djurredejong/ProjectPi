@@ -60,6 +60,8 @@ public class TUI {
 			case ('u'):
 				if (fileName == null) {
 					System.out.println("If you want to upload a file, please provide the name of that file as well.");
+				} else if (fileName.contentEquals("listFilesTemp.txt")) {
+					System.out.println("Sorry, the name of the file cannot be listFilesTemp.txt.");
 				} else {
 					System.out.println(fileName + " will now be uploaded.");
 					client.upload(fileName);

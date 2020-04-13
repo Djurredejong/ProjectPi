@@ -1,6 +1,8 @@
 package client;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -44,7 +46,8 @@ public class Client {
 
 	public void download(String fileName) throws IOException {
 		sendRequest("d " + fileName);
-		System.out.println(fileName + " will now be downloaded!");
+//		System.out.println(fileName + " will now be downloaded!");
+//		String filePath = System.getProperty("user.dir") + File.separator + "testDownload" + File.separator + fileName;
 		String filePath = System.getProperty("user.dir") + File.separator + fileName;
 		Transfer.receiveFile(filePath, socket, pktLossProb);
 		System.out.println(fileName + " has been downloaded!");
@@ -52,7 +55,7 @@ public class Client {
 
 	public void upload(String fileName) throws IOException {
 		sendRequest("u " + fileName);
-		System.out.println(fileName + " will now be uploaded!");
+//		System.out.println(fileName + " will now be uploaded!");
 		File file = new File(fileName);
 		Transfer.sendFile(file, address, port, socket, pktLossProb);
 		System.out.println(fileName + " has been uploaded!");
@@ -60,17 +63,23 @@ public class Client {
 
 	public void remove(String fileName) throws IOException {
 		sendRequest("r " + fileName);
-		System.out.println(fileName + " will now be removed!");
+//		System.out.println(fileName + " will now be removed!");
 	}
 
 	public void listFiles() throws IOException {
 		sendRequest("l");
-		String tempFilePath = System.getProperty("user.dir") + File.separator + "tempList";
-		// received a text file containing the names of all files on the Pi, print
-		// these:
-
+//		String tempFilePath = System.getProperty("user.dir") + File.separator + "testList" + File.separator
+//				+ "listFilesTemp.txt";
+		String tempFilePath = System.getProperty("user.dir") + File.separator + "listFilesTemp.txt";
 		Transfer.receiveFile(tempFilePath, socket, pktLossProb);
-		remove(tempFilePath);
+		BufferedReader br = new BufferedReader(new FileReader("listFilesTemp.txt"));
+		String fileName;
+		while ((fileName = br.readLine()) != null) {
+			System.out.println(fileName);
+		}
+		br.close();
+		File tempFile = new File("listFilesTemp.txt");
+		tempFile.delete();
 	}
 
 	public void quit() throws IOException {

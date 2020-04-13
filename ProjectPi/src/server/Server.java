@@ -1,12 +1,15 @@
 package server;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import helper.Transfer;
 
@@ -70,18 +73,40 @@ public class Server {
 				break;
 			case ('l'):
 				// Client wants a list of files
-
+				Transfer.sendFile(listFiles(), clientAddress, clientPort, socket, pktLossProb);
 				break;
 			case ('q'):
 				// Client wants to quit the program
 				quit = true;
 				break;
 			default:
-				// Bit error in very first byte, don't do anything
+				// Bit error in very first byte or unexpected error, don't do anything
 				break;
 			}
 		}
 		shutdown();
+	}
+
+	private File listFiles() throws IOException {
+		List<String> results = new ArrayList<String>();
+
+		File[] files = new File(System.getProperty("user.dir")).listFiles();
+
+		File listFiles = new File("listFilesTemp.txt");
+
+		for (File f : files) {
+			if (f.isFile() && !f.equals(listFiles)) {
+				results.add(f.getName());
+			}
+		}
+
+		FileWriter writer = new FileWriter("listFilesTemp.txt");
+		for (String str : results) {
+			writer.write(str + System.lineSeparator());
+		}
+		writer.close();
+
+		return listFiles;
 	}
 
 	private void shutdown() {

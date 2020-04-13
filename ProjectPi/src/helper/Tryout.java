@@ -15,7 +15,10 @@ public class Tryout {
 	}
 
 	private static void testListFiles() {
-		File file = new File(srcPath);
+		String current = System.getProperty("user.dir");
+		System.out.println(current);
+
+		File file = new File(current);
 		File[] files = file.listFiles();
 		for (File f : files) {
 			System.out.println(f.getName());
