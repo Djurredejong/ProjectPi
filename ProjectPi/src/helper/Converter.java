@@ -53,13 +53,13 @@ public class Converter {
 		int seqNr = 0;
 		int checksum = 0;
 
-		int maxSeqNr = (int) (Math.pow(2, (8 * 2)) / 2);
+		int maxSeqNr = (int) (Math.pow(2, 8) / 2);
 
 		while (off < len) {
 
 			if (withSeqNr || withChecksum) {
-				byteArray[off] = (byte) ((seqNr >>> 8) & 0xFF);
-				byteArray[off + 1] = (byte) (seqNr & 0xFF);
+				byteArray[off] = (byte) seqNr;
+				byteArray[off + 1] = 0;
 //				byteArray[off + 2] = (byte) ((checksum >>> 8) & 0xFF);
 //				byteArray[off + 3] = (byte) (checksum & 0xFF);
 				off += Transfer.getHeadSize();
