@@ -14,7 +14,7 @@ import helper.Transfer;
 
 public class Client {
 	private static final int maxFileNameLength = 100;
-	private static final double pktLossProb = 0.5;
+	private static final double pktLossProb = 0.01;
 
 	private DatagramSocket socket;
 	private InetAddress address;

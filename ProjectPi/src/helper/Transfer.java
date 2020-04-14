@@ -32,17 +32,17 @@ public class Transfer {
 		byte[] bytesFile = Converter.fileToPacketByteArray(file);
 
 		int off = 0;
+		int lostPkts = 0;
 
 		while (off < bytesFile.length) {
 
+			bytesFile[off + 1] = (byte) lostPkts;
 			DatagramPacket pkt = new DatagramPacket(bytesFile, off, Math.min(pktSize, (bytesFile.length - off)),
 					address, port);
 			sendPacket(pkt, socket, pktLossProb);
 
-//			if (off > (bytesFile.length - pktSize)) {
-//				// Prevent infinite loop by putting a timer on the recursive function.
-//			}
-			System.out.println("lostPkts =  " + receiveAck(pkt, socket, bytesFile[off], pktLossProb, 0));
+			lostPkts = receiveAck(pkt, socket, bytesFile[off], pktLossProb, 0);
+			System.out.println("lostPkts =  " + lostPkts);
 
 			off += pktSize;
 		}
@@ -177,13 +177,14 @@ public class Transfer {
 		System.out.println(" or  <s> to show some statistics regarding the download.");
 		System.out.println("Press the Return key after typing one of these command characters.");
 		int recPackets = 0;
+		int lostPkts = 0;
 		int packetsToRec = fileLength / mtu;
 
 		while (off < fileLength) {
 			prevSeqNr = seqNr;
 
 			if (seqNr == (maxSeqNr - 1)) {
-				pauseTotalTime = checkInput(in, recPackets, packetsToRec, startTime, pauseTotalTime);
+				pauseTotalTime = checkInput(in, recPackets, packetsToRec, lostPkts, startTime, pauseTotalTime);
 			}
 
 			DatagramPacket pkt = new DatagramPacket(buf, pktSize);
@@ -207,6 +208,7 @@ public class Transfer {
 					System.arraycopy(dataArray, 0, recFileBytes, off, Math.min(mtu, (fileLength - off)));
 					recPackets++;
 					off += mtu;
+					lostPkts += pkt.getData()[1];
 				}
 			} else {
 				// Should actually not be allowed to happen, do not copy the data
@@ -231,7 +233,7 @@ public class Transfer {
 		System.out.println("It has taken " + Converter.nanoToTime(timeTaken));
 		System.out.println("The download speed was "
 				+ String.format("%.2f", (8000 * (double) fileLength / (double) timeTaken)) + " Mbps");
-		System.out.println("UNKNOWN" + " times a packet had to be retransmitted.");
+		System.out.println(lostPkts + " times a packet had to be retransmitted.");
 
 		// Finally, convert all the received data from the packets into the file
 		Converter.byteArrayToFile(recFileBytes, pathName);
@@ -257,7 +259,7 @@ public class Transfer {
 	 * Call this method every X packets to check for user input when downloading a
 	 * file
 	 */
-	public static long checkInput(BufferedReader in, int recPackets, int packetsToRec, long startTime,
+	public static long checkInput(BufferedReader in, int recPackets, int packetsToRec, int lostPkts, long startTime,
 			long pauseTotalTime) throws IOException {
 		if (in.ready()) {
 			String input = in.readLine();
@@ -284,7 +286,7 @@ public class Transfer {
 					long timePassed = System.nanoTime() - startTime - pauseTotalTime;
 					System.out.println("The total transmission time is " + Converter.nanoToTime(timePassed));
 					System.out.println(recPackets + " out of " + packetsToRec + " have been succesfully received.");
-					System.out.println("UNKNOWN" + " times a packet had to be retransmitted.");
+					System.out.println(lostPkts + " times a packet had to be retransmitted.");
 					break;
 				default:
 					System.out.println("The character you have typed is not one of the valid command characters.");
