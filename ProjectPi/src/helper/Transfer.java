@@ -42,7 +42,7 @@ public class Transfer {
 //			if (off > (bytesFile.length - pktSize)) {
 //				// Prevent infinite loop by putting a timer on the recursive function.
 //			}
-			receiveAck(pkt, socket, bytesFile[off], pktLossProb);
+			System.out.println("lostPkts =  " + receiveAck(pkt, socket, bytesFile[off], pktLossProb, 0));
 
 			off += pktSize;
 		}
@@ -51,8 +51,8 @@ public class Transfer {
 	/**
 	 * Receive correct acknowledgement or retransmit the packet after timeout
 	 */
-	public static void receiveAck(DatagramPacket pkt, DatagramSocket socket, byte expSeqNr, double pktLossProb)
-			throws IOException {
+	public static int receiveAck(DatagramPacket pkt, DatagramSocket socket, byte expSeqNr, double pktLossProb,
+			int lostPkts) throws IOException {
 		boolean recAck = false;
 		byte recSeqNr = 0;
 		DatagramPacket ack = new DatagramPacket(new byte[1], 1);
@@ -66,11 +66,12 @@ public class Transfer {
 		}
 		if (recAck && (recSeqNr == expSeqNr)) {
 			// All good!
+			return lostPkts;
 		} else {
 			// Keep retransmitting and waiting for the correct ack until the transfer
 			// succeeds
 			sendPacket(pkt, socket, pktLossProb);
-			receiveAck(pkt, socket, expSeqNr, pktLossProb);
+			return receiveAck(pkt, socket, expSeqNr, pktLossProb, lostPkts + 1);
 		}
 	}
 
@@ -96,7 +97,7 @@ public class Transfer {
 		int off = 0;
 		int prevSeqNr = -1;
 		int seqNr = -1;
-		int maxSeqNr = (int) (Math.pow(2, 8) / 2);
+		int maxSeqNr = (int) (Math.pow(2, 7));
 
 		while (off < fileLength) {
 			prevSeqNr = seqNr;
@@ -166,7 +167,7 @@ public class Transfer {
 		int off = 0;
 		int prevSeqNr = -1;
 		int seqNr = -1;
-		int maxSeqNr = (int) (Math.pow(2, 8) / 2);
+		int maxSeqNr = (int) (Math.pow(2, 7));
 
 		long startTime = System.nanoTime();
 		long pauseTotalTime = 0;
@@ -228,8 +229,6 @@ public class Transfer {
 		System.out.println();
 		System.out.println("The file has been downloaded!");
 		System.out.println("It has taken " + Converter.nanoToTime(timeTaken));
-		System.out.println("fileLength = " + fileLength);
-		System.out.println("timeTaken = " + timeTaken);
 		System.out.println("The download speed was "
 				+ String.format("%.2f", (8000 * (double) fileLength / (double) timeTaken)) + " Mbps");
 		System.out.println("UNKNOWN" + " times a packet had to be retransmitted.");

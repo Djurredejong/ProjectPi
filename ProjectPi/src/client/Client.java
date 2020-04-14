@@ -14,7 +14,7 @@ import helper.Transfer;
 
 public class Client {
 	private static final int maxFileNameLength = 100;
-	private static final double pktLossProb = 0.001;
+	private static final double pktLossProb = 0.5;
 
 	private DatagramSocket socket;
 	private InetAddress address;
@@ -48,7 +48,6 @@ public class Client {
 
 	public void download(String fileName) throws IOException {
 		sendRequest("d " + fileName);
-//		String filePath = System.getProperty("user.dir") + File.separator + "testDownload" + File.separator + fileName;
 		String filePath = System.getProperty("user.dir") + File.separator + fileName;
 		Transfer.receiveFile(filePath, socket, pktLossProb, tui.getIn());
 	}
@@ -66,8 +65,6 @@ public class Client {
 
 	public void listFiles() throws IOException {
 		sendRequest("l");
-//		String tempFilePath = System.getProperty("user.dir") + File.separator + "testList" + File.separator
-//				+ "listFilesTemp.txt";
 		String tempFilePath = System.getProperty("user.dir") + File.separator + "listFilesTemp.txt";
 		Transfer.receiveFile(tempFilePath, socket, pktLossProb);
 		BufferedReader br = new BufferedReader(new FileReader("listFilesTemp.txt"));
