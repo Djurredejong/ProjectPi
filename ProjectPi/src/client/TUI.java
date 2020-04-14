@@ -33,7 +33,12 @@ public class TUI {
 
 		String fileName = null;
 
-		if (split.length > 1) {
+		if (split.length > 2) {
+			System.out.println("Sorry, spaces in file names are not allowed here.");
+			return;
+		}
+
+		if (split.length == 2) {
 			fileName = split[1];
 			if (fileName.length() > client.getMaxFileNameLength()) {
 				System.out.println("Sorry, the name of the file can be at most " + client.getMaxFileNameLength()

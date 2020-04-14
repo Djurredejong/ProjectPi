@@ -13,7 +13,25 @@ public class Tryout {
 //		testBytesToStrings();
 //		testListFiles();
 //		testNanoToTime();
-		testBitwiseOps();
+//		testBitwiseOps();
+		testBytestToInt();
+	}
+
+	private static void testBytestToInt() {
+		byte[] tryByte = new byte[6];
+		byte[] tryByte2 = new byte[6];
+		for (int i = 0; i < 6; i++) {
+			tryByte[i] = 0;
+			tryByte2[i] = 0;
+		}
+		for (int i = 0; i < 4; i++) {
+			tryByte[i] = (byte) 112;
+		}
+		for (int i = 2; i < 6; i++) {
+			tryByte2[i] = (byte) 112;
+		}
+		System.out.println(Converter.sixBytesToInt(tryByte));
+		System.out.println(Converter.sixBytesToInt(tryByte2));
 	}
 
 	private static void testBitwiseOps() {
