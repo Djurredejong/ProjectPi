@@ -8,6 +8,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
 import helper.Transfer;
@@ -29,8 +30,7 @@ public class Client {
 
 	public static void main(String[] args) {
 		try {
-			int port = 9999;
-			(new Client()).start(port);
+			(new Client()).start(9999);
 		} catch (SocketException e) {
 			System.out.println("Socket error: " + e.getMessage());
 		} catch (IOException e) {
@@ -41,7 +41,6 @@ public class Client {
 	public void start(int port) throws IOException {
 		this.port = port;
 		serverAddress = discoverServerAddress(socket);
-		socket.setBroadcast(false);
 		System.out.println("Connected to server at " + serverAddress);
 		System.out.println();
 		tui.start();
@@ -49,10 +48,28 @@ public class Client {
 
 	public InetAddress discoverServerAddress(DatagramSocket socket) throws IOException {
 		socket.setBroadcast(true);
+		socket.setSoTimeout(3000);
+
 		DatagramPacket pkt = new DatagramPacket(new byte[] { 99 }, 1, InetAddress.getByName("255.255.255.255"), port);
 		socket.send(pkt);
-		DatagramPacket resPkt = new DatagramPacket(new byte[1], 1);
-		socket.receive(resPkt);
+
+		socket.setBroadcast(false);
+
+		DatagramPacket resPkt = new DatagramPacket(new byte[2], 2);
+		System.out.println(resPkt.getLength());
+
+		while (resPkt.getLength() > 1) {
+			try {
+				socket.receive(resPkt);
+				System.out.println("response received");
+				System.out.println("address of server is " + resPkt.getAddress());
+			} catch (SocketTimeoutException e) {
+				pkt = new DatagramPacket(new byte[] { 99 }, 1, InetAddress.getByName("255.255.255.255"), port);
+				System.out.println("retransmitting packet");
+				socket.send(pkt);
+			}
+		}
+
 		return resPkt.getAddress();
 	}
 
@@ -60,6 +77,7 @@ public class Client {
 		sendRequest("d " + fileName);
 		// Check with server if the file exists
 		DatagramPacket existPkt = new DatagramPacket(new byte[1], 1);
+		socket.setSoTimeout(0);
 		socket.receive(existPkt);
 		if (existPkt.getData()[0] == 0) {
 			System.out.println("Sorry, that file does not exist.");

@@ -21,32 +21,37 @@ public class Server {
 
 	public Server(int port) throws IOException {
 		socket = new DatagramSocket(port);
-		broadcast(socket);
-		socket.setBroadcast(false);
 	}
 
 	public static void main(String[] args) {
 		int port = 9999;
+		System.out.println("server started");
 		try {
-			(new Server(port)).service();
+			Server server = new Server(port);
+			server.broadcast();
+			server.service();
 		} catch (SocketException e) {
 			System.out.println("Socket error: " + e.getMessage());
+			e.printStackTrace();
 		} catch (IOException e) {
 			System.out.println("I/O error: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
-	private static void broadcast(DatagramSocket socket) throws IOException {
-		socket.setBroadcast(true);
-		boolean connected = false;
-		while (!connected) {
-			DatagramPacket pkt = new DatagramPacket(new byte[1], 1);
-			socket.receive(pkt);
-			if (pkt.getData()[0] == (byte) 99) {
-				DatagramPacket resPkt = new DatagramPacket(new byte[] { 99 }, 1, pkt.getAddress(), pkt.getPort());
-				socket.send(resPkt);
-				connected = true;
-			}
+	public void broadcast() throws IOException {
+
+		DatagramPacket pkt = new DatagramPacket(new byte[1], 1);
+		socket.setSoTimeout(0);
+		socket.receive(pkt);
+
+		System.out.println("received broadcasted packet from " + pkt.getAddress());
+		System.out.println("pkt data is " + pkt.getData()[0] + ", pkt length is " + pkt.getLength());
+
+		if (pkt.getLength() == 1 && pkt.getData()[0] == (byte) 99) {
+			DatagramPacket resPkt = new DatagramPacket(new byte[] { 77 }, 1, pkt.getAddress(), pkt.getPort());
+			socket.send(resPkt);
+			System.out.println("sent response packet to " + pkt.getAddress());
 		}
 	}
 
@@ -124,7 +129,8 @@ public class Server {
 		File listFiles = new File("listFilesTemp.txt");
 
 		for (File f : files) {
-			if (f.isFile() && !(f.getName().contentEquals("listFilesTemp.txt"))) {
+			if (f.isFile() && !(f.getName().contentEquals("nu-pi-setup"))
+					&& !(f.getName().contentEquals("listFilesTemp.txt"))) {
 				results.add(f.getName());
 			}
 		}

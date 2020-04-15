@@ -33,15 +33,35 @@ public class Transfer {
 
 		int off = 0;
 		int lostPkts = 0;
+//		int transmittedDirectly = 0;
+//		int meanSendingTime = 0;
+//		int prevMeanSendingTime = 0;
+//		int varSendingTime = 0;
+		int timeout = 100;
 
 		while (off < bytesFile.length) {
 
 			bytesFile[off + 1] = (byte) lostPkts;
 			DatagramPacket pkt = new DatagramPacket(bytesFile, off, Math.min(pktSize, (bytesFile.length - off)),
 					address, port);
-			sendPacket(pkt, socket, pktLossProb);
 
-			lostPkts = receiveAck(pkt, socket, bytesFile[off], pktLossProb, 0);
+//			long timeBefore = System.nanoTime();
+
+			sendPacket(pkt, socket, pktLossProb);
+			lostPkts = receiveAck(pkt, socket, bytesFile[off], pktLossProb, 0, timeout);
+
+//			if (lostPkts == 0) {
+//				int sendingTime = (int) (System.nanoTime() - timeBefore);
+//				// Update mean and variance time for a packet to be send and ack to be received
+//				prevMeanSendingTime = meanSendingTime;
+//				meanSendingTime = (meanSendingTime * transmittedDirectly + sendingTime) / (transmittedDirectly + 1);
+//				transmittedDirectly++;
+//				varSendingTime = ((transmittedDirectly - 2) * varSendingTime
+//						+ (sendingTime - meanSendingTime) * (sendingTime - prevMeanSendingTime))
+//						/ (transmittedDirectly - 1);
+//				// Adjust timeout for the next packet based on updated mean and variance
+//				timeout = 100;
+//			}
 
 			off += pktSize;
 		}
@@ -51,12 +71,12 @@ public class Transfer {
 	 * Receive correct acknowledgement or retransmit the packet after timeout
 	 */
 	public static int receiveAck(DatagramPacket pkt, DatagramSocket socket, byte expSeqNr, double pktLossProb,
-			int lostPkts) throws IOException {
+			int lostPkts, int timeout) throws IOException {
 		boolean recAck = false;
 		byte recSeqNr = 0;
 		DatagramPacket ack = new DatagramPacket(new byte[1], 1);
 		try {
-			socket.setSoTimeout(100);
+			socket.setSoTimeout(timeout);
 			socket.receive(ack);
 			recSeqNr = ack.getData()[0];
 			recAck = true;
@@ -70,7 +90,7 @@ public class Transfer {
 			// Keep retransmitting and waiting for the correct ack until the transfer
 			// succeeds
 			sendPacket(pkt, socket, pktLossProb);
-			return receiveAck(pkt, socket, expSeqNr, pktLossProb, lostPkts + 1);
+			return receiveAck(pkt, socket, expSeqNr, pktLossProb, lostPkts + 1, timeout);
 		}
 	}
 
@@ -81,7 +101,6 @@ public class Transfer {
 
 		// First, receive file info (size)
 		DatagramPacket sizePkt = new DatagramPacket(new byte[6], 6);
-		socket.setSoTimeout(0);
 		socket.receive(sizePkt);
 		byte[] bytesSize = new byte[6];
 		for (int i = 0; i < sizePkt.getLength(); i++) {

@@ -64,6 +64,8 @@ public class TUI {
 					System.out.println("If you want to upload a file, please provide the name of that file as well.");
 				} else if (fileName.contentEquals("listFilesTemp.txt")) {
 					System.out.println("Sorry, the name of the file cannot be listFilesTemp.txt.");
+				} else if (fileName.contentEquals("nu-pi-setup")) {
+					System.out.println("Sorry, the name of the file cannot be nu-pi-setup.");
 				} else {
 					File file = new File(fileName);
 					if (file.exists()) {
@@ -94,6 +96,9 @@ public class TUI {
 				break;
 			default:
 				System.out.println("Please provide one of the valid command characters.");
+				if (Character.isUpperCase(command)) {
+					System.out.println("Please note: the command characters are lower case.");
+				}
 				break;
 			}
 
