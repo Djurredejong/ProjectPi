@@ -1,6 +1,7 @@
 package client;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -65,8 +66,13 @@ public class TUI {
 				} else if (fileName.contentEquals("listFilesTemp.txt")) {
 					System.out.println("Sorry, the name of the file cannot be listFilesTemp.txt.");
 				} else {
-					System.out.println(fileName + " will now be uploaded.");
-					client.upload(fileName);
+					File file = new File(fileName);
+					if (file.exists()) {
+						System.out.println(fileName + " will now be uploaded.");
+						client.upload(fileName);
+					} else {
+						System.out.println("Sorry, that file does not exist.");
+					}
 				}
 				break;
 			case ('r'):

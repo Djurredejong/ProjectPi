@@ -19,20 +19,34 @@ public class Server {
 
 	private DatagramSocket socket;
 
-	public Server(int port) throws SocketException {
-		socket = new DatagramSocket(port);
+	public Server(int port) throws IOException {
+		socket = new DatagramSocket(port, InetAddress.getByName("0.0.0.0"));
+		broadcast(socket);
 	}
 
 	public static void main(String[] args) {
-		System.out.println("The server has been started");
+		int port = 9999;
 		try {
-			int port = 9999;
-			Server server = new Server(port);
-			server.service();
+			(new Server(port)).service();
 		} catch (SocketException e) {
 			System.out.println("Socket error: " + e.getMessage());
 		} catch (IOException e) {
 			System.out.println("I/O error: " + e.getMessage());
+		}
+	}
+
+	private static void broadcast(DatagramSocket socket) throws IOException {
+		socket.setBroadcast(true);
+		boolean connected = false;
+		while (!connected) {
+			DatagramPacket pkt = new DatagramPacket(new byte[1], 1);
+			socket.receive(pkt);
+			if (pkt.getData()[0] == (byte) 99) {
+				DatagramPacket resPkt = new DatagramPacket(new byte[] { 100 }, 1, pkt.getAddress(), pkt.getPort());
+				socket.send(resPkt);
+				connected = true;
+				socket.setBroadcast(false);
+			}
 		}
 	}
 
@@ -60,11 +74,13 @@ public class Server {
 			switch (reqNr) {
 			case ('d'):
 				// Client wants to download the file named fileName
-				Transfer.sendFile(file, clientAddress, clientPort, socket, pktLossProb);
+				if (file.exists()) {
+					Transfer.sendFile(file, clientAddress, clientPort, socket, pktLossProb);
+				}
 				break;
 			case ('u'):
 				// Client wants to upload the file named fileName
-				String filePath = System.getProperty("user.dir") + File.separator + "temp" + File.separator + fileName;
+				String filePath = System.getProperty("user.dir") + File.separator + fileName;
 				Transfer.receiveFile(filePath, socket, pktLossProb);
 				break;
 			case ('r'):

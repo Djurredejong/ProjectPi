@@ -42,7 +42,6 @@ public class Transfer {
 			sendPacket(pkt, socket, pktLossProb);
 
 			lostPkts = receiveAck(pkt, socket, bytesFile[off], pktLossProb, 0);
-			System.out.println("lostPkts =  " + lostPkts);
 
 			off += pktSize;
 		}
