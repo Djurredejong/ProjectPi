@@ -56,7 +56,6 @@ public class TUI {
 				if (fileName == null) {
 					System.out.println("If you want to download a file, please provide the name of that file as well.");
 				} else {
-					System.out.println(fileName + " will now be downloaded.");
 					client.download(fileName);
 				}
 				break;

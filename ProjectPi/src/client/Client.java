@@ -17,7 +17,7 @@ public class Client {
 	private static final double pktLossProb = 0.01;
 
 	private DatagramSocket socket;
-	private InetAddress address;
+	private InetAddress serverAddress;
 	private int port;
 
 	private TUI tui;
@@ -40,8 +40,9 @@ public class Client {
 
 	public void start(int port) throws IOException {
 		this.port = port;
-		this.address = discoverServerAddress(socket);
-		System.out.println("Connected to server at address " + this.address);
+		serverAddress = discoverServerAddress(socket);
+		socket.setBroadcast(false);
+		System.out.println("Connected to server at " + serverAddress);
 		System.out.println();
 		tui.start();
 	}
@@ -50,21 +51,29 @@ public class Client {
 		socket.setBroadcast(true);
 		DatagramPacket pkt = new DatagramPacket(new byte[] { 99 }, 1, InetAddress.getByName("255.255.255.255"), port);
 		socket.send(pkt);
-		DatagramPacket resPkt = new DatagramPacket(new byte[] { 100 }, 1);
+		DatagramPacket resPkt = new DatagramPacket(new byte[1], 1);
 		socket.receive(resPkt);
 		return resPkt.getAddress();
 	}
 
 	public void download(String fileName) throws IOException {
 		sendRequest("d " + fileName);
-		String filePath = System.getProperty("user.dir") + File.separator + fileName;
-		Transfer.receiveFile(filePath, socket, pktLossProb, tui.getIn());
+		// Check with server if the file exists
+		DatagramPacket existPkt = new DatagramPacket(new byte[1], 1);
+		socket.receive(existPkt);
+		if (existPkt.getData()[0] == 0) {
+			System.out.println("Sorry, that file does not exist.");
+		} else {
+			System.out.println(fileName + " will now be downloaded.");
+			String filePath = System.getProperty("user.dir") + File.separator + fileName;
+			Transfer.receiveFile(filePath, socket, pktLossProb, tui.getIn());
+		}
 	}
 
 	public void upload(String fileName) throws IOException {
 		sendRequest("u " + fileName);
 		File file = new File(fileName);
-		Transfer.sendFile(file, address, port, socket, pktLossProb);
+		Transfer.sendFile(file, serverAddress, port, socket, pktLossProb);
 		System.out.println(fileName + " has been uploaded!");
 	}
 
@@ -104,7 +113,7 @@ public class Client {
 			reqBytes[i] = 0;
 		}
 
-		DatagramPacket reqPkt = new DatagramPacket(reqBytes, reqBytes.length, address, port);
+		DatagramPacket reqPkt = new DatagramPacket(reqBytes, reqBytes.length, serverAddress, port);
 		socket.send(reqPkt);
 	}
 

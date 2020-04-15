@@ -20,8 +20,9 @@ public class Server {
 	private DatagramSocket socket;
 
 	public Server(int port) throws IOException {
-		socket = new DatagramSocket(port, InetAddress.getByName("0.0.0.0"));
+		socket = new DatagramSocket(port);
 		broadcast(socket);
+		socket.setBroadcast(false);
 	}
 
 	public static void main(String[] args) {
@@ -42,10 +43,9 @@ public class Server {
 			DatagramPacket pkt = new DatagramPacket(new byte[1], 1);
 			socket.receive(pkt);
 			if (pkt.getData()[0] == (byte) 99) {
-				DatagramPacket resPkt = new DatagramPacket(new byte[] { 100 }, 1, pkt.getAddress(), pkt.getPort());
+				DatagramPacket resPkt = new DatagramPacket(new byte[] { 99 }, 1, pkt.getAddress(), pkt.getPort());
 				socket.send(resPkt);
 				connected = true;
-				socket.setBroadcast(false);
 			}
 		}
 	}
@@ -74,7 +74,16 @@ public class Server {
 			switch (reqNr) {
 			case ('d'):
 				// Client wants to download the file named fileName
+				boolean exists = false;
 				if (file.exists()) {
+					DatagramPacket existPkt = new DatagramPacket(new byte[] { 1 }, 1, clientAddress, clientPort);
+					socket.send(existPkt);
+					exists = true;
+				} else {
+					DatagramPacket existPkt = new DatagramPacket(new byte[] { 0 }, 1, clientAddress, clientPort);
+					socket.send(existPkt);
+				}
+				if (exists) {
 					Transfer.sendFile(file, clientAddress, clientPort, socket, pktLossProb);
 				}
 				break;
@@ -91,7 +100,7 @@ public class Server {
 			case ('l'):
 				// Client wants a list of files
 				Transfer.sendFile(listFiles(), clientAddress, clientPort, socket, pktLossProb);
-				// delete the temp file on the server (not when running server locally!)
+				// delete temp file on the server is not necessary
 //				File tempFile = new File("listFilesTemp.txt");
 //				tempFile.delete();
 				break;
@@ -100,7 +109,7 @@ public class Server {
 				quit = true;
 				break;
 			default:
-				// Bit error in very first byte or unexpected error, don't do anything
+				// Bit error in very first byte or very unexpected error, don't do anything
 				break;
 			}
 		}
