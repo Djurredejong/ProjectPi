@@ -60,7 +60,7 @@ public class Transfer {
 				estSendingTime = estSendingTime + (delta * difference);
 				deviation = deviation + delta * (Math.abs(difference) - deviation);
 				timeoutD = (estSendingTime + (4 * deviation));
-				timeout = Math.max(100, (int) (timeoutD / (1e6)));
+				timeout = Math.max(1, (int) (timeoutD / (1e6)));
 			}
 //			System.out.println("sendingtime is " + sendingTimeInt);
 //			System.out.println("diff is " + difference);
