@@ -34,12 +34,6 @@ public class Transfer {
 		int off = 0;
 		int lostPkts = 0;
 		int timeout = 100;
-		double timeoutD = 0;
-		double estSendingTime = 10e6;
-		double difference = 0;
-		double delta = 0.25;
-		double deviation = 0;
-		int sendingTimeInt = 0;
 
 		while (off < bytesFile.length) {
 
@@ -47,27 +41,8 @@ public class Transfer {
 			DatagramPacket pkt = new DatagramPacket(bytesFile, off, Math.min(pktSize, (bytesFile.length - off)),
 					address, port);
 
-			long timeBefore = System.nanoTime();
-
 			sendPacket(pkt, socket, pktLossProb);
 			lostPkts = receiveAck(pkt, socket, bytesFile[off], pktLossProb, 0, timeout);
-
-			if (lostPkts == 0) {
-				long sendingTime = (System.nanoTime() - timeBefore);
-				sendingTimeInt = (int) sendingTime;
-				// Jacobsen/Karels Algorithm for updating timeout
-				difference = sendingTimeInt - estSendingTime;
-				estSendingTime = estSendingTime + (delta * difference);
-				deviation = deviation + delta * (Math.abs(difference) - deviation);
-				timeoutD = (estSendingTime + (4 * deviation));
-				timeout = Math.max(1, (int) (timeoutD / (1e6)));
-			}
-//			System.out.println("sendingtime is " + sendingTimeInt);
-//			System.out.println("diff is " + difference);
-//			System.out.println("estST is " + estSendingTime);
-//			System.out.println("dev is " + deviation);
-//			System.out.println("tiemoutD is " + timeoutD);
-//			System.out.println("timeout is " + timeout);
 
 			off += pktSize;
 		}
