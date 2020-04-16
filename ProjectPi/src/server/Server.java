@@ -75,17 +75,14 @@ public class Server {
 				// Client wants to download the file named fileName
 				boolean exists = false;
 				if (file.exists()) {
-					System.out.println("d, clientPort is " + clientPort);
 					DatagramPacket existPkt = new DatagramPacket(new byte[] { 1 }, 1, clientAddress, clientPort);
 					socket.send(existPkt);
 					exists = true;
 				} else {
-					System.out.println("d2, clientPort is " + clientPort);
 					DatagramPacket existPkt = new DatagramPacket(new byte[] { 0 }, 1, clientAddress, clientPort);
 					socket.send(existPkt);
 				}
 				if (exists) {
-					System.out.println("d3, clientPort is " + clientPort);
 					Transfer.sendFile(file, clientAddress, clientPort, socket, pktLossProb);
 				}
 				break;
@@ -101,7 +98,6 @@ public class Server {
 				break;
 			case ('l'):
 				// Client wants a list of files
-				System.out.println("l, clientPort is " + clientPort);
 				Transfer.sendFile(listFiles(), clientAddress, clientPort, socket, pktLossProb);
 
 				break;
