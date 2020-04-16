@@ -43,13 +43,9 @@ public class Server {
 		socket.setSoTimeout(0);
 		socket.receive(pkt);
 
-		System.out.println("received broadcasted packet from " + pkt.getAddress() + " at port " + pkt.getPort());
-		System.out.println("pkt data is " + pkt.getData()[0] + ", pkt length is " + pkt.getLength());
-
 		if (pkt.getLength() == 1 && pkt.getData()[0] == (byte) 99) {
 			DatagramPacket resPkt = new DatagramPacket(new byte[] { 77 }, 1, pkt.getAddress(), pkt.getPort());
 			socket.send(resPkt);
-			System.out.println("sent response packet to " + pkt.getAddress() + " at port " + pkt.getPort());
 		}
 	}
 
@@ -107,9 +103,7 @@ public class Server {
 				// Client wants a list of files
 				System.out.println("l, clientPort is " + clientPort);
 				Transfer.sendFile(listFiles(), clientAddress, clientPort, socket, pktLossProb);
-				// delete temp file on the server is not necessary
-//				File tempFile = new File("listFilesTemp.txt");
-//				tempFile.delete();
+
 				break;
 			case ('q'):
 				// Client wants to quit the program

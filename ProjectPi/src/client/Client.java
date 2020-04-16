@@ -15,7 +15,7 @@ import helper.Transfer;
 
 public class Client {
 	private static final int maxFileNameLength = 100;
-	private static final double pktLossProb = 0.01;
+	private static final double pktLossProb = 0;
 
 	private DatagramSocket socket;
 	private InetAddress serverAddress;
@@ -51,7 +51,6 @@ public class Client {
 
 		socket.setBroadcast(true);
 
-		System.out.println("port is " + port);
 		DatagramPacket pkt = new DatagramPacket(new byte[] { 99 }, 1, InetAddress.getByName("255.255.255.255"), port);
 		socket.send(pkt);
 
@@ -61,12 +60,8 @@ public class Client {
 		while (resPkt.getLength() > 1) {
 			try {
 				socket.receive(resPkt);
-				System.out.println("response received");
-				System.out.println("address of server is " + resPkt.getAddress());
 			} catch (SocketTimeoutException e) {
-				System.out.println("2, port is " + port);
 				pkt = new DatagramPacket(new byte[] { 99 }, 1, InetAddress.getByName("255.255.255.255"), port);
-				System.out.println("retransmitting packet");
 				socket.send(pkt);
 			}
 		}
@@ -93,7 +88,6 @@ public class Client {
 	public void upload(String fileName) throws IOException {
 		sendRequest("u " + fileName);
 		File file = new File(fileName);
-		System.out.println("u, port is " + port);
 		Transfer.sendFile(file, serverAddress, port, socket, pktLossProb);
 		System.out.println(fileName + " has been uploaded!");
 	}
@@ -133,8 +127,6 @@ public class Client {
 		for (int i = request.length(); i < reqBytes.length; i++) {
 			reqBytes[i] = 0;
 		}
-
-		System.out.println("sr, port is " + port);
 		DatagramPacket reqPkt = new DatagramPacket(reqBytes, reqBytes.length, serverAddress, port);
 		socket.send(reqPkt);
 	}

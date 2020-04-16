@@ -33,11 +33,11 @@ public class Transfer {
 
 		int off = 0;
 		int lostPkts = 0;
-		int timeout = 10;
+		int timeout = 100;
 		double timeoutD = 10;
-		double estSendingTime = 100;
+		double estSendingTime = 10;
 		double difference = 0;
-		double delta = 0.125;
+		double delta = 0.25;
 		double deviation = 0;
 
 		while (off < bytesFile.length) {
@@ -60,11 +60,6 @@ public class Transfer {
 				deviation = deviation + (delta * (Math.abs(difference) - deviation));
 				timeoutD = (estSendingTime + (4 * deviation)) / 1000000;
 				timeout = Math.max(1, (int) timeoutD);
-				System.out.println("sending time was " + sendingTime);
-				System.out.println("difference is " + difference);
-				System.out.println("estSendingTime is " + estSendingTime);
-				System.out.println("deviation is " + deviation);
-				System.out.println("timeout is now " + timeoutD);
 			}
 
 			off += pktSize;
