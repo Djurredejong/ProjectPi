@@ -51,7 +51,6 @@ public class Transfer {
 			sendPacket(pkt, socket, pktLossProb);
 			lostPkts = receiveAck(pkt, socket, bytesFile[off], pktLossProb, 0, timeout);
 
-			System.out.println("lostPkts = " + lostPkts);
 			if (lostPkts == 0) {
 				long sendingTime = (int) (System.nanoTime() - timeBefore);
 				// Jacobsen/Karels Algorithm for updating timeout
