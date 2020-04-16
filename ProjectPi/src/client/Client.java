@@ -19,18 +19,20 @@ public class Client {
 
 	private DatagramSocket socket;
 	private InetAddress serverAddress;
-	private int port;
+	int port;
 
 	private TUI tui;
 
-	public Client() throws IOException {
+	public Client(int port) throws IOException {
 		socket = new DatagramSocket();
 		tui = new TUI(this);
+		this.port = port;
 	}
 
 	public static void main(String[] args) {
 		try {
-			(new Client()).start(9999);
+			Client client = new Client(9999);
+			client.start();
 		} catch (SocketException e) {
 			System.out.println("Socket error: " + e.getMessage());
 		} catch (IOException e) {
@@ -38,37 +40,37 @@ public class Client {
 		}
 	}
 
-	public void start(int port) throws IOException {
-		this.port = port;
-		serverAddress = discoverServerAddress(socket);
+	public void start() throws IOException {
+		serverAddress = findServer(socket);
 		System.out.println("Connected to server at " + serverAddress);
 		System.out.println();
 		tui.start();
 	}
 
-	public InetAddress discoverServerAddress(DatagramSocket socket) throws IOException {
-		socket.setBroadcast(true);
-		socket.setSoTimeout(3000);
+	public InetAddress findServer(DatagramSocket socket) throws IOException {
 
+		socket.setBroadcast(true);
+
+		System.out.println("port is " + port);
 		DatagramPacket pkt = new DatagramPacket(new byte[] { 99 }, 1, InetAddress.getByName("255.255.255.255"), port);
 		socket.send(pkt);
 
-		socket.setBroadcast(false);
-
 		DatagramPacket resPkt = new DatagramPacket(new byte[2], 2);
-		System.out.println(resPkt.getLength());
 
+		socket.setSoTimeout(5000);
 		while (resPkt.getLength() > 1) {
 			try {
 				socket.receive(resPkt);
 				System.out.println("response received");
 				System.out.println("address of server is " + resPkt.getAddress());
 			} catch (SocketTimeoutException e) {
+				System.out.println("2, port is " + port);
 				pkt = new DatagramPacket(new byte[] { 99 }, 1, InetAddress.getByName("255.255.255.255"), port);
 				System.out.println("retransmitting packet");
 				socket.send(pkt);
 			}
 		}
+		socket.setBroadcast(false);
 
 		return resPkt.getAddress();
 	}
@@ -91,6 +93,7 @@ public class Client {
 	public void upload(String fileName) throws IOException {
 		sendRequest("u " + fileName);
 		File file = new File(fileName);
+		System.out.println("u, port is " + port);
 		Transfer.sendFile(file, serverAddress, port, socket, pktLossProb);
 		System.out.println(fileName + " has been uploaded!");
 	}
@@ -131,6 +134,7 @@ public class Client {
 			reqBytes[i] = 0;
 		}
 
+		System.out.println("sr, port is " + port);
 		DatagramPacket reqPkt = new DatagramPacket(reqBytes, reqBytes.length, serverAddress, port);
 		socket.send(reqPkt);
 	}

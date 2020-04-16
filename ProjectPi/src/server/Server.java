@@ -24,11 +24,9 @@ public class Server {
 	}
 
 	public static void main(String[] args) {
-		int port = 9999;
-		System.out.println("server started");
 		try {
-			Server server = new Server(port);
-			server.broadcast();
+			Server server = new Server(9999);
+			server.findClient();
 			server.service();
 		} catch (SocketException e) {
 			System.out.println("Socket error: " + e.getMessage());
@@ -39,19 +37,19 @@ public class Server {
 		}
 	}
 
-	public void broadcast() throws IOException {
+	public void findClient() throws IOException {
 
 		DatagramPacket pkt = new DatagramPacket(new byte[1], 1);
 		socket.setSoTimeout(0);
 		socket.receive(pkt);
 
-		System.out.println("received broadcasted packet from " + pkt.getAddress());
+		System.out.println("received broadcasted packet from " + pkt.getAddress() + " at port " + pkt.getPort());
 		System.out.println("pkt data is " + pkt.getData()[0] + ", pkt length is " + pkt.getLength());
 
 		if (pkt.getLength() == 1 && pkt.getData()[0] == (byte) 99) {
 			DatagramPacket resPkt = new DatagramPacket(new byte[] { 77 }, 1, pkt.getAddress(), pkt.getPort());
 			socket.send(resPkt);
-			System.out.println("sent response packet to " + pkt.getAddress());
+			System.out.println("sent response packet to " + pkt.getAddress() + " at port " + pkt.getPort());
 		}
 	}
 
@@ -81,14 +79,17 @@ public class Server {
 				// Client wants to download the file named fileName
 				boolean exists = false;
 				if (file.exists()) {
+					System.out.println("d, clientPort is " + clientPort);
 					DatagramPacket existPkt = new DatagramPacket(new byte[] { 1 }, 1, clientAddress, clientPort);
 					socket.send(existPkt);
 					exists = true;
 				} else {
+					System.out.println("d2, clientPort is " + clientPort);
 					DatagramPacket existPkt = new DatagramPacket(new byte[] { 0 }, 1, clientAddress, clientPort);
 					socket.send(existPkt);
 				}
 				if (exists) {
+					System.out.println("d3, clientPort is " + clientPort);
 					Transfer.sendFile(file, clientAddress, clientPort, socket, pktLossProb);
 				}
 				break;
@@ -104,6 +105,7 @@ public class Server {
 				break;
 			case ('l'):
 				// Client wants a list of files
+				System.out.println("l, clientPort is " + clientPort);
 				Transfer.sendFile(listFiles(), clientAddress, clientPort, socket, pktLossProb);
 				// delete temp file on the server is not necessary
 //				File tempFile = new File("listFilesTemp.txt");

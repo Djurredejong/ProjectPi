@@ -33,11 +33,12 @@ public class Transfer {
 
 		int off = 0;
 		int lostPkts = 0;
-//		int transmittedDirectly = 0;
-//		int meanSendingTime = 0;
-//		int prevMeanSendingTime = 0;
-//		int varSendingTime = 0;
-		int timeout = 100;
+		int timeout = 10;
+		double timeoutD = 10;
+		double estSendingTime = 100;
+		double difference = 0;
+		double delta = 0.125;
+		double deviation = 0;
 
 		while (off < bytesFile.length) {
 
@@ -45,23 +46,26 @@ public class Transfer {
 			DatagramPacket pkt = new DatagramPacket(bytesFile, off, Math.min(pktSize, (bytesFile.length - off)),
 					address, port);
 
-//			long timeBefore = System.nanoTime();
+			long timeBefore = System.nanoTime();
 
 			sendPacket(pkt, socket, pktLossProb);
 			lostPkts = receiveAck(pkt, socket, bytesFile[off], pktLossProb, 0, timeout);
 
-//			if (lostPkts == 0) {
-//				int sendingTime = (int) (System.nanoTime() - timeBefore);
-//				// Update mean and variance time for a packet to be send and ack to be received
-//				prevMeanSendingTime = meanSendingTime;
-//				meanSendingTime = (meanSendingTime * transmittedDirectly + sendingTime) / (transmittedDirectly + 1);
-//				transmittedDirectly++;
-//				varSendingTime = ((transmittedDirectly - 2) * varSendingTime
-//						+ (sendingTime - meanSendingTime) * (sendingTime - prevMeanSendingTime))
-//						/ (transmittedDirectly - 1);
-//				// Adjust timeout for the next packet based on updated mean and variance
-//				timeout = 100;
-//			}
+			System.out.println("lostPkts = " + lostPkts);
+			if (lostPkts == 0) {
+				long sendingTime = (int) (System.nanoTime() - timeBefore);
+				// Jacobsen/Karels Algorithm for updating timeout
+				difference = sendingTime - estSendingTime;
+				estSendingTime = estSendingTime + (delta * difference);
+				deviation = deviation + (delta * (Math.abs(difference) - deviation));
+				timeoutD = (estSendingTime + (4 * deviation)) / 1000000;
+				timeout = Math.max(1, (int) timeoutD);
+				System.out.println("sending time was " + sendingTime);
+				System.out.println("difference is " + difference);
+				System.out.println("estSendingTime is " + estSendingTime);
+				System.out.println("deviation is " + deviation);
+				System.out.println("timeout is now " + timeoutD);
+			}
 
 			off += pktSize;
 		}
